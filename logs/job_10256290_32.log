@@ -1,0 +1,100 @@
+000 (10256290.032.000) 10/13 11:28:56 Job submitted from host: <188.185.16.120:9618?addrs=188.185.16.120-9618+[2001-1458-d00-65--100-39b]-9618&alias=bigbird27.cern.ch&noUDP&sock=schedd_1944443_bea1>
+...
+040 (10256290.032.000) 10/13 12:37:23 Started transferring input files
+	Transferring to host: <188.185.194.156:9618?addrs=188.185.194.156-9618+[2001-1458-303-21--100-98]-9618&alias=b9p20p1008.cern.ch&noUDP&sock=slot1_17_4605_6394_19293>
+...
+040 (10256290.032.000) 10/13 12:37:23 Finished transferring input files
+...
+001 (10256290.032.000) 10/13 12:37:23 Job executing on host: <188.185.194.156:9618?addrs=188.185.194.156-9618+[2001-1458-303-21--100-98]-9618&alias=b9p20p1008.cern.ch&noUDP&sock=startd_3628_15af>
+	SlotName: slot1_17@b9p20p1008.cern.ch
+	CondorScratchDir = "/pool/condor/dir_2013226"
+	Cpus = 1
+	Disk = 3759
+	GPUs = 0
+	Memory = 3000
+...
+006 (10256290.032.000) 10/13 12:37:36 Image size of job updated: 17804
+	18  -  MemoryUsage of job (MB)
+	17804  -  ResidentSetSize of job (KB)
+...
+006 (10256290.032.000) 10/13 12:42:36 Image size of job updated: 369816
+	362  -  MemoryUsage of job (MB)
+	369816  -  ResidentSetSize of job (KB)
+...
+006 (10256290.032.000) 10/13 12:47:37 Image size of job updated: 428352
+	419  -  MemoryUsage of job (MB)
+	428352  -  ResidentSetSize of job (KB)
+...
+006 (10256290.032.000) 10/13 12:52:38 Image size of job updated: 507608
+	496  -  MemoryUsage of job (MB)
+	507608  -  ResidentSetSize of job (KB)
+...
+006 (10256290.032.000) 10/13 12:57:38 Image size of job updated: 586348
+	573  -  MemoryUsage of job (MB)
+	586348  -  ResidentSetSize of job (KB)
+...
+006 (10256290.032.000) 10/13 13:02:39 Image size of job updated: 690208
+	675  -  MemoryUsage of job (MB)
+	690208  -  ResidentSetSize of job (KB)
+...
+006 (10256290.032.000) 10/13 13:07:40 Image size of job updated: 743360
+	726  -  MemoryUsage of job (MB)
+	743360  -  ResidentSetSize of job (KB)
+...
+006 (10256290.032.000) 10/13 13:12:40 Image size of job updated: 819976
+	801  -  MemoryUsage of job (MB)
+	819976  -  ResidentSetSize of job (KB)
+...
+006 (10256290.032.000) 10/13 13:17:41 Image size of job updated: 898240
+	878  -  MemoryUsage of job (MB)
+	898240  -  ResidentSetSize of job (KB)
+...
+006 (10256290.032.000) 10/13 13:22:42 Image size of job updated: 977552
+	955  -  MemoryUsage of job (MB)
+	977552  -  ResidentSetSize of job (KB)
+...
+006 (10256290.032.000) 10/13 13:27:42 Image size of job updated: 1050564
+	1026  -  MemoryUsage of job (MB)
+	1050564  -  ResidentSetSize of job (KB)
+...
+006 (10256290.032.000) 10/13 13:32:42 Image size of job updated: 1125720
+	1100  -  MemoryUsage of job (MB)
+	1125720  -  ResidentSetSize of job (KB)
+...
+006 (10256290.032.000) 10/13 13:37:43 Image size of job updated: 1201720
+	1174  -  MemoryUsage of job (MB)
+	1201720  -  ResidentSetSize of job (KB)
+...
+006 (10256290.032.000) 10/13 13:42:43 Image size of job updated: 1277732
+	1248  -  MemoryUsage of job (MB)
+	1277732  -  ResidentSetSize of job (KB)
+...
+006 (10256290.032.000) 10/13 13:47:43 Image size of job updated: 1352072
+	1321  -  MemoryUsage of job (MB)
+	1352072  -  ResidentSetSize of job (KB)
+...
+006 (10256290.032.000) 10/13 13:52:44 Image size of job updated: 1426016
+	1393  -  MemoryUsage of job (MB)
+	1426016  -  ResidentSetSize of job (KB)
+...
+006 (10256290.032.000) 10/13 13:57:44 Image size of job updated: 1495684
+	1461  -  MemoryUsage of job (MB)
+	1495684  -  ResidentSetSize of job (KB)
+...
+006 (10256290.032.000) 10/13 13:58:14 Image size of job updated: 1501724
+	1461  -  MemoryUsage of job (MB)
+	1495684  -  ResidentSetSize of job (KB)
+...
+040 (10256290.032.000) 10/13 13:58:14 Started transferring output files
+...
+040 (10256290.032.000) 10/13 13:58:14 Finished transferring output files
+...
+007 (10256290.032.000) 10/13 13:58:14 Shadow exception!
+	Error from slot1_17@b9p20p1008.cern.ch: STARTER at 188.185.194.156 failed to send file(s) to <188.185.16.120:9618>: |Error: reading from file /pool/condor/dir_2013226/logs/: (errno 2) No such file or directory; SHADOW failed to receive file(s) from <188.185.194.156:35567>
+	761894  -  Run Bytes Sent By Job
+	1955  -  Run Bytes Received By Job
+...
+012 (10256290.032.000) 10/13 13:58:14 Job was held.
+	Transfer output files failure at execution point slot1_17@b9p20p1008.cern.ch while sending files to access point bigbird27. Details: reading from file /pool/condor/dir_2013226/logs/: (errno 2) No such file or directory
+	Code 12 Subcode 2
+...

@@ -23,7 +23,7 @@ try:
 except ValueError as e:
     parser.error(str(e))
 run_str = args.run.zfill(6)
-print(f"Processing Run: {run_str}, File: {file_list}")
+print(f"Processing Year: {args.year} Run: {run_str}, File: {file_list}")
 
 # --- Condor submit file template ---
 submit_content = f"""executable = runAlignment.sh
