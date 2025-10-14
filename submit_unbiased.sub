@@ -1,5 +1,5 @@
 executable = runAlignment.sh
-arguments = 2023 011705 00400 False True
+
 output = logs/job_$(Cluster)_$(Process).out
 error  = logs/job_$(Cluster)_$(Process).err
 log    = logs/job_$(Cluster)_$(Process).log
@@ -14,4 +14,154 @@ transfer_output_files = logs/
 on_exit_remove          = (ExitBySignal == False) && (ExitCode == 0)
 max_retries             = 3
 requirements = (Machine =!= LastRemoteHost) && (OpSysAndVer =?= "AlmaLinux9")
+
+arguments = 2023 011705 00400 False True
 queue
+
+arguments = 2023 011705 00401 False True
+queue
+
+arguments = 2023 011705 00402 False True
+queue
+
+arguments = 2023 011705 00403 False True
+queue
+
+arguments = 2023 011705 00404 False True
+queue
+
+arguments = 2023 011705 00405 False True
+queue
+
+arguments = 2023 011705 00406 False True
+queue
+
+arguments = 2023 011705 00407 False True
+queue
+
+arguments = 2023 011705 00408 False True
+queue
+
+arguments = 2023 011705 00409 False True
+queue
+
+arguments = 2023 011705 00410 False True
+queue
+
+arguments = 2023 011705 00411 False True
+queue
+
+arguments = 2023 011705 00412 False True
+queue
+
+arguments = 2023 011705 00413 False True
+queue
+
+arguments = 2023 011705 00414 False True
+queue
+
+arguments = 2023 011705 00415 False True
+queue
+
+arguments = 2023 011705 00416 False True
+queue
+
+arguments = 2023 011705 00417 False True
+queue
+
+arguments = 2023 011705 00418 False True
+queue
+
+arguments = 2023 011705 00419 False True
+queue
+
+arguments = 2023 011705 00420 False True
+queue
+
+arguments = 2023 011705 00421 False True
+queue
+
+arguments = 2023 011705 00422 False True
+queue
+
+arguments = 2023 011705 00423 False True
+queue
+
+arguments = 2023 011705 00424 False True
+queue
+
+arguments = 2023 011705 00425 False True
+queue
+
+arguments = 2023 011705 00426 False True
+queue
+
+arguments = 2023 011705 00427 False True
+queue
+
+arguments = 2023 011705 00428 False True
+queue
+
+arguments = 2023 011705 00429 False True
+queue
+
+arguments = 2023 011705 00430 False True
+queue
+
+arguments = 2023 011705 00431 False True
+queue
+
+arguments = 2023 011705 00432 False True
+queue
+
+arguments = 2023 011705 00433 False True
+queue
+
+arguments = 2023 011705 00434 False True
+queue
+
+arguments = 2023 011705 00435 False True
+queue
+
+arguments = 2023 011705 00436 False True
+queue
+
+arguments = 2023 011705 00437 False True
+queue
+
+arguments = 2023 011705 00438 False True
+queue
+
+arguments = 2023 011705 00439 False True
+queue
+
+arguments = 2023 011705 00440 False True
+queue
+
+arguments = 2023 011705 00441 False True
+queue
+
+arguments = 2023 011705 00442 False True
+queue
+
+arguments = 2023 011705 00443 False True
+queue
+
+arguments = 2023 011705 00444 False True
+queue
+
+arguments = 2023 011705 00445 False True
+queue
+
+arguments = 2023 011705 00446 False True
+queue
+
+arguments = 2023 011705 00447 False True
+queue
+
+arguments = 2023 011705 00448 False True
+queue
+
+arguments = 2023 011705 00449 False True
+queue
+

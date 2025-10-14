@@ -1,0 +1,92 @@
+000 (10256290.001.000) 10/13 11:28:56 Job submitted from host: <188.185.16.120:9618?addrs=188.185.16.120-9618+[2001-1458-d00-65--100-39b]-9618&alias=bigbird27.cern.ch&noUDP&sock=schedd_1944443_bea1>
+...
+040 (10256290.001.000) 10/13 11:49:05 Started transferring input files
+	Transferring to host: <128.142.161.89:9618?addrs=128.142.161.89-9618+[2001-1458-301-b8--100-17]-9618&alias=b9g03p5498.cern.ch&noUDP&sock=slot1_19_3511885_6eb3_21492>
+...
+040 (10256290.001.000) 10/13 11:49:05 Finished transferring input files
+...
+001 (10256290.001.000) 10/13 11:49:05 Job executing on host: <128.142.161.89:9618?addrs=128.142.161.89-9618+[2001-1458-301-b8--100-17]-9618&alias=b9g03p5498.cern.ch&noUDP&sock=startd_4074_00ec>
+	SlotName: slot1_19@b9g03p5498.cern.ch
+	CondorScratchDir = "/pool/condor/dir_1921249"
+	Cpus = 1
+	Disk = 3990
+	GPUs = 0
+	Memory = 3000
+...
+006 (10256290.001.000) 10/13 11:49:18 Image size of job updated: 10976
+	2  -  MemoryUsage of job (MB)
+	1392  -  ResidentSetSize of job (KB)
+...
+006 (10256290.001.000) 10/13 11:54:18 Image size of job updated: 399904
+	391  -  MemoryUsage of job (MB)
+	399904  -  ResidentSetSize of job (KB)
+...
+006 (10256290.001.000) 10/13 11:59:19 Image size of job updated: 478008
+	467  -  MemoryUsage of job (MB)
+	478008  -  ResidentSetSize of job (KB)
+...
+006 (10256290.001.000) 10/13 12:04:20 Image size of job updated: 558264
+	546  -  MemoryUsage of job (MB)
+	558264  -  ResidentSetSize of job (KB)
+...
+006 (10256290.001.000) 10/13 12:09:20 Image size of job updated: 646836
+	632  -  MemoryUsage of job (MB)
+	646836  -  ResidentSetSize of job (KB)
+...
+006 (10256290.001.000) 10/13 12:14:21 Image size of job updated: 737264
+	720  -  MemoryUsage of job (MB)
+	737264  -  ResidentSetSize of job (KB)
+...
+006 (10256290.001.000) 10/13 12:19:22 Image size of job updated: 818092
+	799  -  MemoryUsage of job (MB)
+	818092  -  ResidentSetSize of job (KB)
+...
+006 (10256290.001.000) 10/13 12:24:22 Image size of job updated: 898828
+	878  -  MemoryUsage of job (MB)
+	898828  -  ResidentSetSize of job (KB)
+...
+006 (10256290.001.000) 10/13 12:29:22 Image size of job updated: 977968
+	956  -  MemoryUsage of job (MB)
+	977968  -  ResidentSetSize of job (KB)
+...
+006 (10256290.001.000) 10/13 12:34:23 Image size of job updated: 1055476
+	1031  -  MemoryUsage of job (MB)
+	1055476  -  ResidentSetSize of job (KB)
+...
+006 (10256290.001.000) 10/13 12:39:23 Image size of job updated: 1130416
+	1104  -  MemoryUsage of job (MB)
+	1130416  -  ResidentSetSize of job (KB)
+...
+006 (10256290.001.000) 10/13 12:44:23 Image size of job updated: 1202980
+	1175  -  MemoryUsage of job (MB)
+	1202980  -  ResidentSetSize of job (KB)
+...
+006 (10256290.001.000) 10/13 12:49:24 Image size of job updated: 1278512
+	1249  -  MemoryUsage of job (MB)
+	1278512  -  ResidentSetSize of job (KB)
+...
+006 (10256290.001.000) 10/13 12:54:25 Image size of job updated: 1516724
+	1482  -  MemoryUsage of job (MB)
+	1516724  -  ResidentSetSize of job (KB)
+...
+006 (10256290.001.000) 10/13 12:59:25 Image size of job updated: 1517500
+	1482  -  MemoryUsage of job (MB)
+	1517500  -  ResidentSetSize of job (KB)
+...
+006 (10256290.001.000) 10/13 13:04:50 Image size of job updated: 1521376
+	1482  -  MemoryUsage of job (MB)
+	1517500  -  ResidentSetSize of job (KB)
+...
+040 (10256290.001.000) 10/13 13:04:50 Started transferring output files
+...
+040 (10256290.001.000) 10/13 13:04:50 Finished transferring output files
+...
+007 (10256290.001.000) 10/13 13:04:50 Shadow exception!
+	Error from slot1_19@b9g03p5498.cern.ch: STARTER at 128.142.161.89 failed to send file(s) to <188.185.16.120:9618>: |Error: reading from file /pool/condor/dir_1921249/logs/: (errno 2) No such file or directory; SHADOW failed to receive file(s) from <128.142.161.89:39295>
+	760471  -  Run Bytes Sent By Job
+	1955  -  Run Bytes Received By Job
+...
+012 (10256290.001.000) 10/13 13:04:50 Job was held.
+	Transfer output files failure at execution point slot1_19@b9g03p5498.cern.ch while sending files to access point bigbird27. Details: reading from file /pool/condor/dir_1921249/logs/: (errno 2) No such file or directory
+	Code 12 Subcode 2
+...

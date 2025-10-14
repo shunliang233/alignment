@@ -1,4 +1,7 @@
 #!/bin/bash
+
+mkdir -p logs
+
 YEAR=$1
 RUN=$2
 RAW_FILE=$3
@@ -52,9 +55,9 @@ RAW_FILE_PATH="/eos/experiment/faser/raw/${YEAR}/${RUN}/Faser-Physics-${RUN}-${R
 
 # Build the command based on THREEST and FOURST flags
 if [ "$THREEST" = "True" ]; then
-    CMD="python ../../faser_reco_alignment.py \"$RAW_FILE_PATH\" --alignment --noBackward --noIFT"
+    CMD="python ../../1raw2reco/faser_reco_alignment.py \"$RAW_FILE_PATH\" --alignment --noBackward --noIFT"
 elif [ "$FOURST" = "True" ]; then
-    CMD="python ../../faser_reco_alignment.py \"$RAW_FILE_PATH\" --alignment --noBackward"
+    CMD="python ../../1raw2reco/faser_reco_alignment.py \"$RAW_FILE_PATH\" --alignment --noBackward"
 fi
 
 # Run the final command
