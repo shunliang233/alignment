@@ -1,7 +1,7 @@
 # 构建和安装目录
 
 # 编译产物
-__pychache__/
+__pycache__/
 *.pyc
 
 # CMake 生成文件
