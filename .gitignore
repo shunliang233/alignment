@@ -13,6 +13,10 @@ Thumbs.db
 # 编译器和调试器文件
 
 # 日志和临时文件
+/logs*/
+/011705*/
+/main*.log
+/inputforalign.txt
 
 # 输出文件（根据项目调整）
 

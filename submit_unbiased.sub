@@ -1,13 +1,13 @@
 executable = runAlignment.sh
 
-output = logs/job_$(Cluster)_$(Process).out
-error  = logs/job_$(Cluster)_$(Process).err
-log    = logs/job_$(Cluster)_$(Process).log
+output = logs2/job_$(Cluster)_$(Process).out
+error  = logs2/job_$(Cluster)_$(Process).err
+log    = logs2/job_$(Cluster)_$(Process).log
 
 request_cpus = 1
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
-transfer_output_files = logs/
+transfer_output_files = logs2/
 
 +JobFlavour           = "longlunch"
 #+AccountingGroup = "group_u_FASER.users" #Add when you have access to faser computing group
@@ -15,153 +15,153 @@ on_exit_remove          = (ExitBySignal == False) && (ExitCode == 0)
 max_retries             = 3
 requirements = (Machine =!= LastRemoteHost) && (OpSysAndVer =?= "AlmaLinux9")
 
-arguments = 2023 011705 00400 False True
+arguments = 2023 011705 00400 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00401 False True
+arguments = 2023 011705 00401 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00402 False True
+arguments = 2023 011705 00402 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00403 False True
+arguments = 2023 011705 00403 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00404 False True
+arguments = 2023 011705 00404 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00405 False True
+arguments = 2023 011705 00405 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00406 False True
+arguments = 2023 011705 00406 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00407 False True
+arguments = 2023 011705 00407 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00408 False True
+arguments = 2023 011705 00408 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00409 False True
+arguments = 2023 011705 00409 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00410 False True
+arguments = 2023 011705 00410 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00411 False True
+arguments = 2023 011705 00411 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00412 False True
+arguments = 2023 011705 00412 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00413 False True
+arguments = 2023 011705 00413 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00414 False True
+arguments = 2023 011705 00414 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00415 False True
+arguments = 2023 011705 00415 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00416 False True
+arguments = 2023 011705 00416 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00417 False True
+arguments = 2023 011705 00417 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00418 False True
+arguments = 2023 011705 00418 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00419 False True
+arguments = 2023 011705 00419 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00420 False True
+arguments = 2023 011705 00420 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00421 False True
+arguments = 2023 011705 00421 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00422 False True
+arguments = 2023 011705 00422 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00423 False True
+arguments = 2023 011705 00423 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00424 False True
+arguments = 2023 011705 00424 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00425 False True
+arguments = 2023 011705 00425 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00426 False True
+arguments = 2023 011705 00426 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00427 False True
+arguments = 2023 011705 00427 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00428 False True
+arguments = 2023 011705 00428 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00429 False True
+arguments = 2023 011705 00429 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00430 False True
+arguments = 2023 011705 00430 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00431 False True
+arguments = 2023 011705 00431 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00432 False True
+arguments = 2023 011705 00432 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00433 False True
+arguments = 2023 011705 00433 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00434 False True
+arguments = 2023 011705 00434 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00435 False True
+arguments = 2023 011705 00435 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00436 False True
+arguments = 2023 011705 00436 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00437 False True
+arguments = 2023 011705 00437 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00438 False True
+arguments = 2023 011705 00438 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00439 False True
+arguments = 2023 011705 00439 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00440 False True
+arguments = 2023 011705 00440 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00441 False True
+arguments = 2023 011705 00441 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00442 False True
+arguments = 2023 011705 00442 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00443 False True
+arguments = 2023 011705 00443 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00444 False True
+arguments = 2023 011705 00444 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00445 False True
+arguments = 2023 011705 00445 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00446 False True
+arguments = 2023 011705 00446 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00447 False True
+arguments = 2023 011705 00447 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00448 False True
+arguments = 2023 011705 00448 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 
-arguments = 2023 011705 00449 False True
+arguments = 2023 011705 00449 False True 2 /eos/home-s/shunlian/Alignment/align/2.1raw2reco/inputforalign.txt
 queue
 

@@ -13,6 +13,10 @@ source /eos/home-s/shunlian/Alignment/install/setup.sh
 
 ### 基本用法
 ```bash
+git clone git@github.com:shunliang233/raw2reco.git
+```
+
+```bash
 python main.py --year 2023 --run 011705 --file 400
 # 或使用简短参数
 python main.py -y 2023 -r 11705 -f 400
