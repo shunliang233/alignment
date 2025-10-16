@@ -44,7 +44,10 @@ class RawList:
     # Magic methods
     def __str__(self) -> str:
         """字符串表示"""
-        return self.file_str
+        if len(self.raw_files) == 1:
+            return str(int(self.raw_files[0]))
+        else:
+            return f"{int(self.raw_files[0])}-{int(self.raw_files[-1]) + 1}"
     def __len__(self) -> int:
         """返回文件数量"""
         return len(self.raw_files)

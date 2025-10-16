@@ -13,11 +13,12 @@ Thumbs.db
 # 编译器和调试器文件
 
 # 日志和临时文件
-/logs*/
-/011705*/
-/main*.log
-/inputforalign.txt
 
 # 输出文件（根据项目调整）
+/Y[0-9][0-9][0-9][0-9]*/
 
 # 包管理器目录（如果使用）
+
+# 未完成项目
+/auto-copy/
+/auto_iter_test.py

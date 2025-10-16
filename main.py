@@ -3,6 +3,8 @@ import argparse
 import subprocess
 from RawList import RawList
 
+# python3 main.py -y 2023 -r 011705 -f 400-500 -i 1 -a ./inputforalign.txt
+
 # --- Argument parsing ---
 parser = argparse.ArgumentParser(description="Generate and submit Condor job for FASER alignment")
 
@@ -12,7 +14,7 @@ parser.add_argument('--run', '-r', type=str, required=True,
                     help='Run number (e.g., 011705, will be padded to 6 digits)')
 parser.add_argument('--file', '-f', type=str, required=True,
                     help='Raw file number or range. Single file: 400; Range: 400-500 or 400:500')
-parser.add_argument('--iteration', '-i', type=int, required=True,
+parser.add_argument('--iteration', '-i', type=str, required=True,
                     help='Iteration number (integer, required)')
 parser.add_argument('--align', '-a', type=str, required=True,
                     help='Path to inputforalign.txt file (required)')
@@ -22,33 +24,34 @@ parser.add_argument('--threest', action='store_true', default=True,
                     help='Run 3 Stations')
 args = parser.parse_args()
 
-# --- Format run, file number, align path  ---
+# --- Format run, file, iter number, align path  ---
 try:
     file_list = RawList(args.file)
 except ValueError as e:
     parser.error(str(e))
 run_str = args.run.zfill(6)
+iter_str = args.iteration.zfill(2)
 try:
-    align_path = os.path.abspath(args.align)
+    align_path = os.path.realpath(args.align)
     if not os.path.isfile(align_path):
         raise FileNotFoundError(f"Alignment parameter file not found: {align_path}")
 except Exception as e:
     parser.error(str(e))
 print(f"Processing ...")
-print(f"\tYear: {args.year} Run: {run_str}, File: {file_list}, Iteration: {args.iteration}")
+print(f"\tYear: {args.year} Run: {run_str}, File: {file_list}, Iteration: {iter_str}")
 print(f"\tAlignment Parameters: {align_path}")
 
 # --- Condor submit file template ---
 submit_content = f"""executable = runAlignment.sh
 
-output = logs{args.iteration}/job_$(Cluster)_$(Process).out
-error  = logs{args.iteration}/job_$(Cluster)_$(Process).err
-log    = logs{args.iteration}/job_$(Cluster)_$(Process).log
+output = logs/job_$(Cluster)_$(Process).out
+error  = logs/job_$(Cluster)_$(Process).err
+log    = logs/job_$(Cluster)_$(Process).log
 
 request_cpus = 1
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
-transfer_output_files = logs{args.iteration}/
+transfer_output_files = logs/
 
 +JobFlavour           = "longlunch"
 #+AccountingGroup = "group_u_FASER.users" #Add when you have access to faser computing group
@@ -58,9 +61,16 @@ requirements = (Machine =!= LastRemoteHost) && (OpSysAndVer =?= "AlmaLinux9")
 
 """
 
+# --- Make work dir for jobs ---
+main_dir = f"Y{args.year}_R{run_str}_F{str(file_list)}"
+main_dir_path = os.path.join(os.getcwd(), main_dir)
+iter_dir = os.path.join(main_dir_path, f"iter{iter_str}")
+os.makedirs(iter_dir, exist_ok=True)
+print(f"Made work directory: {iter_dir}")
+
 # --- Add job entries to .sub ---
 for file_str in file_list:
-    script_args = f"{args.year} {run_str} {file_str} {args.fourst} {args.threest} {args.iteration} {align_path}"
+    script_args = f"{args.year} {run_str} {file_str} {args.fourst} {args.threest} {iter_dir} {align_path}"
     submit_content += f"arguments = {script_args}\nqueue\n\n"
 
 # --- Save to .sub file ---
@@ -69,11 +79,11 @@ with open(submit_filename, "w") as f:
     f.write(submit_content)
 print(f"Condor submit file '{submit_filename}' created.")
 
-# --- Submit the job to Condor ---
-try:
-    result = subprocess.run(["condor_submit", "-spool", submit_filename], check=True, capture_output=True, text=True)
-    print("Condor submission successful.")
-    print(result.stdout)
-except subprocess.CalledProcessError as e:
-    print("Error submitting job to Condor:")
-    print(e.stderr)
+# # --- Submit the job to Condor ---
+# try:
+#     result = subprocess.run(["condor_submit", "-spool", submit_filename], check=True, capture_output=True, text=True)
+#     print("Condor submission successful.")
+#     print(result.stdout)
+# except subprocess.CalledProcessError as e:
+#     print("Error submitting job to Condor:")
+#     print(e.stderr)
