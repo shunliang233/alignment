@@ -13,6 +13,7 @@ Thumbs.db
 # 编译器和调试器文件
 
 # 日志和临时文件
+/main.log
 
 # 输出文件（根据项目调整）
 /Y[0-9][0-9][0-9][0-9]*/
@@ -22,3 +23,4 @@ Thumbs.db
 # 未完成项目
 /auto-copy/
 /auto_iter_test.py
+/root/
