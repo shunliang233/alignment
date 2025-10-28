@@ -1,9 +1,15 @@
 import os
+import re
 import shutil
 import argparse
 import subprocess
 import time
+import sys
+from datetime import datetime, timezone, timedelta
 from RawList import RawList
+
+# 设置标准输出无缓冲
+sys.stdout.reconfigure(line_buffering=True)
 
 # --- Argument parsing ---
 parser = argparse.ArgumentParser(description="Iteration for FASER alignment.")
@@ -67,13 +73,13 @@ for it in range(1, iter_int + 1):
     os.makedirs(pede_dir, exist_ok=True)
     
     # 1. reco
-    os.chdir(reco_dir)
+    os.chdir(reco_dir) # prepare files
     shutil.copy2(exe_path, reco_dir)
     input_path = os.path.join(reco_dir, input_str)
     if it == 1:
-        open(input_path, 'w').close()
+        open(input_path, "w").close()
     else:
-        last_iter_str = f"iter{it-1:02d}"
+        last_iter_str = f"{iter_str}{it-1:02d}"
         last_iter_dir = os.path.join(main_dir, last_iter_str)
         cp_path = os.path.join(last_iter_dir, input_str)
         try:
@@ -81,12 +87,14 @@ for it in range(1, iter_int + 1):
         except FileNotFoundError:
             raise FileNotFoundError(f"Alignment file not found: {cp_path}")
     sub_path = shutil.copy2(sub_tmp_path, reco_dir)
-    with open(sub_path, 'a') as f:
+    with open(sub_path, "a") as f:
         f.write("\n")
         for file_str in file_list:
             exe_args = f"{year_str} {run_str} {file_str} {args.fourst} {args.threest} {reco_dir} {src_dir} {env_path}"
             f.write(f"arguments = {exe_args}\nqueue\n\n")
-    try: # submit to condor
+    
+    cluster_id = None # submit to condor
+    try:
         result = subprocess.run(
             ["condor_submit", "-spool", sub_path],
             check=True,
@@ -94,22 +102,56 @@ for it in range(1, iter_int + 1):
             text=True,
             stderr=subprocess.STDOUT
         )
-        
-        print("Condor submission successful.")
-        print(result.stdout)
+        with open("condor.log", "w") as log_file:
+            log_file.write(result.stdout)
+        m = re.search(r"(\d+) job\(s\) submitted to cluster (\d+)\.", result.stdout)
+        if m:
+            job_count = int(m.group(1))
+            cluster_id = int(m.group(2))
+            print(f"Submitted {job_count} jobs to cluster {cluster_id}.")
+        else:
+            raise ValueError(f"Could not parse condor output:\n{result.stdout}")
     except subprocess.CalledProcessError as e:
-        print("Error submitting job to Condor:")
-        print(e.stderr)
+        print(f"Error: submitting job to Condor:\n{e.stderr}")
+        sys.exit(1)
+    except ValueError as e:
+        print(f"Error: {e}")
+        sys.exit(1)
 
-    subprocess.run(f"condor_submit batch_{it}.sub", shell=True)
-    
-    # 3. 等待所有job结束
+    if cluster_id is None: # monitor condor jobs
+        print("Error: cluster_id not set")
+        sys.exit(1)
+    print(f"Monitoring cluster {cluster_id}...")
     while True:
-        out = subprocess.getoutput("condor_q $USER")
-        if '0 jobs' in out:  # 或根据实际condor_q输出判断
+        time.sleep(300)
+        idle_str = subprocess.getoutput(f"condor_q {cluster_id} -idle")
+        run_str = subprocess.getoutput(f"condor_q {cluster_id} -run")
+        hold_str = subprocess.getoutput(f"condor_q {cluster_id} -hold")
+        pattern = rf"{cluster_id}\.\d+"
+        idle_count = len(re.findall(pattern, idle_str))
+        run_count = len(re.findall(pattern, run_str))
+        wait_count = idle_count + run_count
+        hold_count = len(re.findall(pattern, hold_str))
+        utc8_time = datetime.now(timezone(timedelta(hours=8)))
+        time_str = f"Beijing Time: {utc8_time.strftime('%Y-%m-%d %H:%M:%S')}"
+        if hold_count == 0 and wait_count == 0:
+            print(f"{time_str} Finished: All jobs completed successfully.")
             break
-        time.sleep(60)
-        
+        elif hold_count != 0 and wait_count == 0:
+            print(f"{time_str} Warning Finished: {hold_count} jobs hold.")
+            break
+        elif hold_count == 0 and wait_count != 0:
+            print(f"{time_str} Info: {wait_count} jobs running.")
+        elif hold_count != 0 and wait_count != 0:
+            print(f"{time_str} Warning: {hold_count} jobs hold.")
+    if hold_count != 0:
+        print("Error: Some jobs are on hold.")
+        sys.exit(1)
+    
+    # 3. millepede
+    os.chdir(pede_dir)
+    # subprocess.run([exe_path, "millepede", input_str, output_str], check=True)
+
     # 4. 合并50个输出文件
     subprocess.run(f"cat outputs_{it}/output_* > merged_{it}.txt", shell=True)  # 举例
     # 5. 用 merged_{it}.txt 生成下一轮参数
