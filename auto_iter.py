@@ -52,11 +52,12 @@ if args.remain and os.path.exists(log_path) and os.path.getsize(log_path) != 0:
     if start_idx is not None and start_idx+1 < len(lines):
         # 下一行应包含 iter 和 cluster
         next_line = lines[start_idx+1]
-        m = re.search(r"iter: (\d+), cluster: (\d+)", next_line)
+        m = re.search(r"iter: (\d+), cluster: (\d+), jobs: (\d+).", next_line)
         if m:
             resume_it = int(m.group(1))
             resume_cluster = int(m.group(2))
-            print(f"\n[RESUME] iter: {resume_it}, cluster: {resume_cluster} ...")
+            resume_jobs = int(m.group(3))
+            print(f"\n[RESUME] iter: {resume_it}, cluster: {resume_cluster}, jobs: {resume_jobs} ...")
         else:
             resume_it = 1
             resume_cluster = None
@@ -112,7 +113,7 @@ for it in range(1, iter_int + 1):
     # Start a new iteration
     elif it > resume_it or it == resume_it and resume_cluster is None:
         # 0. Work dir for this iteration
-        print("\nStarting iteration: ", it)
+        print("\nStarting iteration:")
         iter_dir = os.path.join(main_dir, f"{iter_str}{str(it).zfill(2)}")
         reco_dir = os.path.join(iter_dir, reco_str)
         kfalign_dir =  os.path.join(iter_dir, kfalign_str)
@@ -156,7 +157,7 @@ for it in range(1, iter_int + 1):
             if m:
                 job_count = int(m.group(1))
                 cluster_id = int(m.group(2))
-                print(f"Submitted {job_count} jobs to cluster {cluster_id}.")
+                print(f"\titer: {it}, cluster: {cluster_id}, jobs: {job_count}.")
             else:
                 raise ValueError(f"Could not parse condor output:\n{result.stdout}")
         except subprocess.CalledProcessError as e:
@@ -171,7 +172,8 @@ for it in range(1, iter_int + 1):
         cluster_id = resume_cluster
         resume_cluster = None  # 只用一次
         # 0. Work dir for this iteration
-        print("\nStarting iteration: ", it)
+        print("\nStarting iteration:")
+        print(f"\titer: {it}, cluster: {cluster_id}, jobs: {job_count}.")
         iter_dir = os.path.join(main_dir, f"{iter_str}{str(it).zfill(2)}")
         reco_dir = os.path.join(iter_dir, reco_str)
         kfalign_dir =  os.path.join(iter_dir, kfalign_str)
@@ -184,19 +186,33 @@ for it in range(1, iter_int + 1):
     if cluster_id is None: # monitor condor jobs
         print("Error: cluster_id not set")
         sys.exit(1)
-    print(f"Monitoring cluster {cluster_id}...")
+    print(f"Monitoring ...")
     while True:
         time.sleep(300)
-        idle_stat = subprocess.getoutput(f"condor_q {cluster_id} -idle")
-        work_stat = subprocess.getoutput(f"condor_q {cluster_id} -run")
-        hold_stat = subprocess.getoutput(f"condor_q {cluster_id} -hold")
+        utc8_time = datetime.now(timezone(timedelta(hours=8)))
+        time_str = f"Beijing Time: {utc8_time.strftime('%Y-%m-%d %H:%M:%S')}"
+        idle_res = subprocess.run(["condor_q", str(cluster_id), "-idle"], capture_output=True, text=True)
+        idle_stat = idle_res.stdout
+        idle_err = idle_res.stderr
+        idle_code = idle_res.returncode
+        work_res = subprocess.run(["condor_q", str(cluster_id), "-run"], capture_output=True, text=True)
+        work_stat = work_res.stdout
+        work_err = work_res.stderr
+        work_code = work_res.returncode
+        hold_res = subprocess.run(["condor_q", str(cluster_id), "-hold"], capture_output=True, text=True)
+        hold_stat = hold_res.stdout
+        hold_err = hold_res.stderr
+        hold_code = hold_res.returncode
+        if idle_code != 0 or work_code != 0 or hold_code != 0:
+            print(f"{time_str} Warning: condor_q failed:")
+            print(f"\tidle={idle_code}, work={work_code}, hold={hold_code}")
+            print(f"\tidle_err: {idle_err}")
+            continue
         pattern = rf"{cluster_id}\.\d+"
         idle_count = len(re.findall(pattern, idle_stat))
         work_count = len(re.findall(pattern, work_stat))
         wait_count = idle_count + work_count
         hold_count = len(re.findall(pattern, hold_stat))
-        utc8_time = datetime.now(timezone(timedelta(hours=8)))
-        time_str = f"Beijing Time: {utc8_time.strftime('%Y-%m-%d %H:%M:%S')}"
         if hold_count == 0 and wait_count == 0:
             print(f"{time_str} Finished: All jobs completed successfully.")
             break
