@@ -3,9 +3,9 @@ Process ID: 2110570
 Year: 2023 Run: 011705, Files: 450-500, Iterations: 10
 Main directory created at: /eos/home-s/shunlian/Alignment/align/2.1raw2reco/Y2023_R011705_F450-500
 
-Starting iteration:  1
-Submitted 50 jobs to cluster 10407544.
-Monitoring cluster 10407544...
+Starting iteration:
+    iter: 1, cluster: 10407544, jobs: 50.
+Monitoring ...
 Beijing Time: 2025-10-29 10:49:55 Info: 50 jobs running.
 Beijing Time: 2025-10-29 10:54:56 Info: 50 jobs running.
 Beijing Time: 2025-10-29 10:59:57 Info: 50 jobs running.
@@ -34,9 +34,9 @@ Beijing Time: 2025-10-29 12:50:11 Info: 1 jobs running.
 Beijing Time: 2025-10-29 12:55:12 Finished: All jobs completed successfully.
 Millepede completed successfully.
 
-Starting iteration:  2
-Submitted 50 jobs to cluster 10407545.
-Monitoring cluster 10407545...
+Starting iteration:
+    iter: 2, cluster: 10407545, jobs: 50.
+Monitoring ...
 Beijing Time: 2025-10-29 13:02:45 Info: 50 jobs running.
 Beijing Time: 2025-10-29 13:07:46 Info: 50 jobs running.
 Beijing Time: 2025-10-29 13:12:46 Info: 50 jobs running.
@@ -56,3 +56,34 @@ Beijing Time: 2025-10-29 14:17:54 Info: 39 jobs running.
 Beijing Time: 2025-10-29 14:22:55 Info: 33 jobs running.
 Beijing Time: 2025-10-29 14:27:55 Info: 22 jobs running.
 Beijing Time: 2025-10-29 14:32:56 Info: 11 jobs running.
+nohup: ignoring input
+
+[RESUME] iter: 2, cluster: 10407545 ...
+Process ID: 2510042
+Year: 2023 Run: 011705, Files: 450-500, Iterations: 10
+Main directory created at: /eos/home-s/shunlian/Alignment/align/2.1raw2reco/Y2023_R011705_F450-500
+
+Starting iteration:  2
+Monitoring cluster 10407545...
+Beijing Time: 2025-10-29 18:12:45 Finished: All jobs completed successfully.
+Millepede completed successfully.
+
+Starting iteration:  3
+Submitted 50 jobs to cluster 10407551.
+Monitoring cluster 10407551...
+Beijing Time: 2025-10-29 18:20:24 Info: 50 jobs running.
+Beijing Time: 2025-10-29 18:25:51 Info: 50 jobs running.
+Beijing Time: 2025-10-29 18:30:52 Info: 50 jobs running.
+Beijing Time: 2025-10-29 18:35:53 Info: 50 jobs running.
+Beijing Time: 2025-10-29 18:40:54 Info: 50 jobs running.
+Beijing Time: 2025-10-29 18:45:55 Info: 50 jobs running.
+Beijing Time: 2025-10-29 18:50:55 Info: 50 jobs running.
+Beijing Time: 2025-10-29 18:55:56 Info: 50 jobs running.
+Beijing Time: 2025-10-29 19:00:57 Info: 50 jobs running.
+Beijing Time: 2025-10-29 19:05:57 Info: 50 jobs running.
+Beijing Time: 2025-10-29 19:11:58 Finished: All jobs completed successfully.
+Error: Millepede failed:
+Executing: /eos/home-s/shunlian/Alignment/align/2.1raw2reco/millepede/bin/1convert -i /eos/home-s/shunlian/Alignment/align/2.1raw2reco/Y2023_R011705_F450-500/iter03/2kfalignment -o /eos/home-s/shunlian/Alignment/align/2.1raw2reco/Y2023_R011705_F450-500/iter03/3millepede/mp2input
+Executing: pede mp2str-noIFT-2layersfixed_v2_ss.txt
+Executing: /eos/home-s/shunlian/Alignment/align/2.1raw2reco/millepede/bin/3fixanotherlayers <./millepede.res >./Fixanotherlayers.txt
+

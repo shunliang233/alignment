@@ -1,9 +1,9 @@
-# How to do Alignment
+# Auto Iteration by Python Script
 This package mainly submit condor reconstruction jobs and do millepede iteratively.
 
-The `main.py` script can do iteration automatically if run as a daemon like:
+The `auto_iter.py` script can do iteration automatically if run as a daemon like:
 ```bash
-nohup python3 auto_iter_test.py -y 2023 -r 011705 -f 450-500 -i 10 &>auto_iter_test.log &
+nohup python3 auto_iter.py -y 2023 -r 011705 -f 450-500 -i 10 &>>auto_iter.log &
 ```
 
 The script will find the specified raw files in `/eos/experiment/faser/raw/` and repeat the iteration for `10` times as specified by `-i` operation.
