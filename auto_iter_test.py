@@ -8,8 +8,17 @@ import sys
 from datetime import datetime, timezone, timedelta
 from RawList import RawList
 
+# source /eos/home-s/shunlian/Alignment/py_env.sh
+# nohup python3 auto_iter_test.py -y 2023 -r 011705 -f 450-500 -i 10 &>auto_iter_test.log &
+
 # 设置标准输出无缓冲
 sys.stdout.reconfigure(line_buffering=True)
+
+# 记录进程 ID
+print(f"Process ID: {os.getpid()}")
+
+# Some Absolute Paths temporarily for convenience
+env_path = "/eos/home-s/shunlian/Alignment/env.sh" # Environment for faser_reco_alignment.py
 
 # --- Argument parsing ---
 parser = argparse.ArgumentParser(description="Iteration for FASER alignment.")
@@ -37,11 +46,9 @@ try:
 except ValueError as e:
     parser.error(str(e))
 iter_int = int(args.iterations)
-print(f"Processing ...")
-print(f"\tYear: {year_str} Run: {run_str}, Files: {file_list}, Iterations: {iter_int}")
+print(f"Year: {year_str} Run: {run_str}, Files: {file_list}, Iterations: {iter_int}")
 
 # --- Env Path ---
-env_path = "/eos/home-s/shunlian/Alignment/env.sh"
 if not os.path.isfile(env_path):
     raise FileNotFoundError(f"Environment script not found: {env_path}")
 
@@ -52,7 +59,9 @@ main_dir = os.path.join(src_dir, main_str)
 iter_str = "iter"
 reco_str = "1reco"
 kfalign_str = "2kfalignment"
-pede_str = "3millepede"
+millepede_str = "3millepede"
+mille_str = "millepede"
+mille_path = os.path.join(src_dir, mille_str, "bin", f"{mille_str}.py")
 exe_str = "runAlignment.sh"
 exe_path = os.path.join(src_dir, exe_str)
 input_str = "inputforalign.txt"
@@ -61,17 +70,18 @@ sub_tmp_path = os.path.join(src_dir, sub_str)
 os.makedirs(main_dir, exist_ok=args.remain)
 print(f"Main directory created at: {main_dir}")
 
+# --- Iterations ---
 for it in range(1, iter_int + 1):
     # 0. Work dir for this iteration
     print("\nStarting iteration: ", it)
     iter_dir = os.path.join(main_dir, f"{iter_str}{str(it).zfill(2)}")
     reco_dir = os.path.join(iter_dir, reco_str)
     kfalign_dir =  os.path.join(iter_dir, kfalign_str)
-    pede_dir = os.path.join(iter_dir, pede_str)
+    millepede_dir = os.path.join(iter_dir, millepede_str)
     os.makedirs(reco_dir, exist_ok=True)
     os.makedirs(kfalign_dir, exist_ok=True)
-    os.makedirs(pede_dir, exist_ok=True)
-    
+    os.makedirs(millepede_dir, exist_ok=True)
+
     # 1. reco
     os.chdir(reco_dir) # prepare files
     shutil.copy2(exe_path, reco_dir)
@@ -99,8 +109,7 @@ for it in range(1, iter_int + 1):
             ["condor_submit", "-spool", sub_path],
             check=True,
             capture_output=True,
-            text=True,
-            stderr=subprocess.STDOUT
+            text=True
         )
         with open("condor.log", "w") as log_file:
             log_file.write(result.stdout)
@@ -125,12 +134,12 @@ for it in range(1, iter_int + 1):
     while True:
         time.sleep(300)
         idle_str = subprocess.getoutput(f"condor_q {cluster_id} -idle")
-        run_str = subprocess.getoutput(f"condor_q {cluster_id} -run")
+        work_str = subprocess.getoutput(f"condor_q {cluster_id} -run")
         hold_str = subprocess.getoutput(f"condor_q {cluster_id} -hold")
         pattern = rf"{cluster_id}\.\d+"
         idle_count = len(re.findall(pattern, idle_str))
-        run_count = len(re.findall(pattern, run_str))
-        wait_count = idle_count + run_count
+        work_count = len(re.findall(pattern, work_str))
+        wait_count = idle_count + work_count
         hold_count = len(re.findall(pattern, hold_str))
         utc8_time = datetime.now(timezone(timedelta(hours=8)))
         time_str = f"Beijing Time: {utc8_time.strftime('%Y-%m-%d %H:%M:%S')}"
@@ -149,9 +158,17 @@ for it in range(1, iter_int + 1):
         sys.exit(1)
     
     # 3. millepede
-    os.chdir(pede_dir)
-    # subprocess.run([exe_path, "millepede", input_str, output_str], check=True)
-
-    # 4. 合并50个输出文件
-    subprocess.run(f"cat outputs_{it}/output_* > merged_{it}.txt", shell=True)  # 举例
-    # 5. 用 merged_{it}.txt 生成下一轮参数
+    os.chdir(millepede_dir)
+    try:
+        result = subprocess.run(
+            ["python3", mille_path, "-i", kfalign_dir],
+            check=True,
+            capture_output=True,
+            text=True
+        )
+        with open("mymille.log", "w") as log_file:
+            log_file.write(result.stdout)
+        print("Millepede completed successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error: Millepede failed:\n{e.stdout}")
+        sys.exit(1)

@@ -1,4 +1,13 @@
-# How to use
+# How to do Alignment
+This package mainly submit condor reconstruction jobs and do millepede iteratively.
+
+The `main.py` script can do iteration automatically if run as a daemon like:
+```bash
+nohup python3 auto_iter_test.py -y 2023 -r 011705 -f 450-500 -i 10 &>auto_iter_test.log &
+```
+
+The script will find the specified raw files in `/eos/experiment/faser/raw/` and repeat the iteration for `10` times as specified by `-i` operation.
+
 
 ## Source environment
 ```bash
@@ -11,50 +20,44 @@ source /eos/home-s/shunlian/Alignment/install/setup.sh
 
 ## Run `main.py`
 
-### 基本用法
-```bash
-git clone git@github.com:shunliang233/raw2reco.git
-```
-
+### Basic usage
 ```bash
 python main.py --year 2023 --run 011705 --file 400
-# 或使用简短参数
+# Or use short options
 python main.py -y 2023 -r 11705 -f 400
 ```
 
-### 批量处理多个 rawfile
+### Batch processing multiple rawfiles
 ```bash
-# 使用范围格式 start-end
+# Use range format start-end
 python main.py --year 2023 --run 011705 --file 400-450
 
-# 使用范围格式 start:end
+# Use range format start:end
 python main.py --year 2023 --run 011705 --file 400:450
 
-# 简短参数形式
+# Short option form
 python main.py -y 2023 -r 11705 -f 400-450
 ```
 
-### 参数说明
-- `--year, -y`: 年份 (必需，例如: 2022-2025)
-- `--run, -r`: 运行编号 (必需，例如: 011705，会自动补零到6位)
-- `--file, -f`: 单个原始文件编号 (如: 400) 或范围 (如: 400-450 或 400:450)
-- `--fourst`: 运行4站模式 (可选，默认关闭)
-- `--threest`: 运行3站模式 (可选，默认开启)
+### Parameter description
+- `--year, -y`: Year (required, e.g.: 2022-2025)
+- `--run, -r`: Run number (required, e.g.: 011705, will be zero-padded to 6 digits)
+- `--file, -f`: Single raw file number (e.g.: 400) or range (e.g.: 400-450 or 400:450)
+- `--fourst`: Run 4-station mode (optional, off by default)
+- `--threest`: Run 3-station mode (optional, on by default)
 
+## File description
+- Run the main program with `main.py`
+- The class for processing the `--file` parameter is in `RawList.py`
+- Generates the `submit_unbiased.sub` file and submits it to Condor with `-spool`
+- Submission information is stored in `main.log`
+- Each Condor node independently runs the `runAlignment.sh` script to process each `.raw` file
+- The script includes `aligndb_copy.sh` parameter configuration and the `faser_reco_alignment.py` reconstruction algorithm
+- The reconstructed `.root` files are stored in the `../2root_file` directory
+- After completion, use `condor_transfer_data ${Cluster}` to retrieve log files
 
-## 文件说明
-- 运行 `main.py` 项目主程序
-- 处理 `--file` 参数的类位于 `RawList.py` 中
-- 生成 `submit_unbiased.sub` 文件，并以 `-spool` 形式提交到 Condor
-- 提交信息存储在 `main.log` 中
-- 每一个 Condor 节点单独运行 `runAlignment.sh` 脚本处理每个 `.raw` 文件
-- 脚本中包括 `aligndb_copy.sh` 参数配置，和 `faser_reco_alignment.py` 重建算法
-- 重建的 `.root` 文件存入 `../2root_file` 目录中
-- 运行完成后用 `condor_transfer_data ${Cluster}` 获取日志文件
-
-
-### 日志文件
-job执行后，日志文件会保存在 `logs/` 目录：
-- `job_$(Cluster)_$(Process).out` - 标准输出
-- `job_$(Cluster)_$(Process).err` - 错误输出  
-- `job_$(Cluster)_$(Process).log` - Condor日志
+### Log files
+After job execution, log files are saved in the `logs/` directory:
+- `job_$(Cluster)_$(Process).out` - Standard output
+- `job_$(Cluster)_$(Process).err` - Error output  
+- `job_$(Cluster)_$(Process).log` - Condor log
