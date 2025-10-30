@@ -170,7 +170,9 @@ for it in range(1, iter_int + 1):
     # 断点运行前置设置
     elif it == resume_it and resume_cluster is not None:
         cluster_id = resume_cluster
+        job_count = resume_jobs
         resume_cluster = None  # 只用一次
+        resume_jobs = None  # 只用一次
         # 0. Work dir for this iteration
         print("\nStarting iteration:")
         print(f"\titer: {it}, cluster: {cluster_id}, jobs: {job_count}.")
