@@ -16,8 +16,9 @@ Thumbs.db
 /main.log
 /auto_iter.log
 
-# 输出文件（根据项目调整）
+# Output
 /Y[0-9][0-9][0-9][0-9]*/
+/Draw/
 
 # 包管理器目录（如果使用）
 

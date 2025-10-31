@@ -59,5 +59,5 @@ python main.py -y 2023 -r 11705 -f 400-450
 ### Log files
 After job execution, log files are saved in the `logs/` directory:
 - `job_$(Cluster)_$(Process).out` - Standard output
-- `job_$(Cluster)_$(Process).err` - Error output  
+- `job_$(Cluster)_$(Process).err` - Error output
 - `job_$(Cluster)_$(Process).log` - Condor log

@@ -1,7 +1,20 @@
 from typing import List, Iterator
 
 class RawList:
-    """处理原始文件编号字符串的类，支持单个文件和范围格式"""
+    """
+    处理原始文件编号字符串的类，支持单个文件和范围格式
+
+    >>> RawList('400')
+    RawList('400')
+    >>> str(RawList('400'))
+    '400'
+    >>> RawList('400-402')
+    RawList('400-402')
+    >>> str(RawList('400-402'))
+    '400-402'
+    >>> list(RawList('400-402'))
+    ['00400', '00401']
+    """
     
     # 构造函数
     def __init__(self, file_str: str):
@@ -48,6 +61,8 @@ class RawList:
             return str(int(self.raw_files[0]))
         else:
             return f"{int(self.raw_files[0])}-{int(self.raw_files[-1]) + 1}"
+    def __repr__(self) -> str:
+        return f"RawList({self.file_str!r})"
     def __len__(self) -> int:
         """返回文件数量"""
         return len(self.raw_files)
