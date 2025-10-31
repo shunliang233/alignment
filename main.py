@@ -7,6 +7,22 @@ from RawList import RawList
 
 # python3 main.py -y 2023 -r 011705 -f 400-450 -i 5 &>main.log
 
+def create_env_script(calypso_install_path, env_script_path):
+    """
+    Brief:
+        Create environment setup script for job submission.
+    Args:
+        calypso_install_path (str): Path to Calypso installation. Should contain the 'setup.sh'.
+        env_script_path (str): Path to save the generated environment script.
+    Returns:
+        None
+    """
+    if not os.path.isfile(env_script_path):
+        with open(env_script_path, "w") as f:
+            f.write("export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase\n")
+            f.write("source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh\n")
+            f.write("asetup --input=calypso/asetup.faser Athena,24.0.41\n")
+
 # --- Argument parsing ---
 parser = argparse.ArgumentParser(description="Generate and submit Condor job for FASER alignment")
 
@@ -22,7 +38,23 @@ parser.add_argument('--fourst', action='store_true', default=False,
                     help='Run 4 Stations')
 parser.add_argument('--threest', action='store_true', default=True,
                     help='Run 3 Stations')
+parser.add_argument('--env_script', type=str, default='reco_condor_env.sh',
+                    help='Path to environment setup script. Will be created if does not exist.')
+# --- Calypso installation path is only required if env_script does not exist ---
+parser.add_argument('--calypso_path', type=str, required=False, default=None,
+                    help='Path to Calypso installation. Required if env_script does not exist.')
 args = parser.parse_args()
+
+# --- Env Path ---
+env_path = args.env_script
+if not os.path.isfile(env_path):
+    if args.calypso_path is None:
+        parser.error("Calypso installation path is required to create the environment script.")
+    create_env_script(args.calypso_path, env_path)
+    print(f"Created environment setup script at: {env_path}")
+else:
+    print(f"Using existing environment setup script at: {env_path}")
+
 
 # --- Format run, file, iter number  ---
 try:
@@ -33,11 +65,6 @@ run_str = args.run.zfill(6)
 iter_str = args.iteration.zfill(2)
 print(f"Processing ...")
 print(f"\tYear: {args.year} Run: {run_str}, File: {file_list}, Iteration: {iter_str}")
-
-# --- Env Path ---
-env_path = "/eos/home-s/shunlian/Alignment/env.sh"
-if not os.path.isfile(env_path):
-    raise FileNotFoundError(f"Environment script not found: {env_path}")
 
 # --- Make work dir ---
 main_str = f"Y{args.year}_R{run_str}_F{str(file_list)}"
