@@ -6,34 +6,32 @@ RUN=$2
 FILE=$3
 FOURST=$4
 THREEST=$5
-IT_DIR=$6
-ALIGN_PATH=$7
+RECO_DIR=$6
+SRC_DIR=$7
+ENV_PATH=$8
 echo "Running with parameters:"
 echo " Year: $YEAR"
 echo " Run: $RUN"
 echo " File: $FILE"
 echo " FOURST: $FOURST"
 echo " THREEST: $THREEST"
-echo " Work: $IT_DIR"
-echo " Align: $ALIGN_PATH"
+echo " RecoDir: $RECO_DIR"
+echo " SrcDir: $SRC_DIR"
+echo " EnvPath: $ENV_PATH"
 echo ""
 
 # Dir for condor to store logs
 mkdir -p logs
-echo "=== Create logs directory ==="
+echo "=== Create logs directory on execute node ==="
 
 # Setup environment
-cd /eos/user/c/chiw/FASER/Alignment #Your Directory to Calypso
-source env.sh
-cd /eos/user/c/chiw/FASER/Alignment/Alignment-Shunliang #Your Directory to runAlignment.sh
-TEMP_DIR=$(pwd)
-echo "=== Setup Environment ==="
+source $ENV_PATH
+echo "=== Sourced environment from $ENV_PATH ==="
 
 # Create working directory
-mkdir -p "$IT_DIR/1reco/$FILE"
-cd "$IT_DIR/1reco/$FILE"
+mkdir -p "$RECO_DIR/$RUN/$FILE"
+cd "$RECO_DIR/$RUN/$FILE"
 WORK_DIR=$(pwd)
-cp $ALIGN_PATH $IT_DIR/1reco/inputforalign.txt
 echo "=== Work directory for this job: $WORK_DIR ==="
 
 # Setup poolcond path
@@ -42,10 +40,10 @@ export EOS_MGM_URL=root://eosuser.cern.ch
 echo "=== Setup pool path ${ATLAS_POOLCOND_PATH} ==="
 
 # Copy templates and database
-cp $TEMP_DIR/templates/aligndb_copy.sh ./
-cp $TEMP_DIR/templates/aligndb_template_head.sh ./
-cp $TEMP_DIR/templates/aligndb_template_tail.sh ./
-cp $TEMP_DIR/templates/WriteAlignment* ./
+cp $SRC_DIR/templates/aligndb_copy.sh ./
+cp $SRC_DIR/templates/aligndb_template_head.sh ./
+cp $SRC_DIR/templates/aligndb_template_tail.sh ./
+cp $SRC_DIR/templates/WriteAlignment* ./
 rm -rf data
 mkdir -p data/sqlite200
 mkdir -p data/poolcond
@@ -56,7 +54,7 @@ echo "=== Copied templates ==="
 rm aligndb_copy.sh
 touch aligndb_copy.sh
 cat aligndb_template_head.sh >./aligndb_copy.sh
-ALIGN_VAR=$(cat $ALIGN_PATH)
+ALIGN_VAR=$(cat "$RECO_DIR/inputforalign.txt")
 echo "python WriteAlignmentConfig_Faser04.py 'AlignDbTool.AlignmentConstants={$ALIGN_VAR}' >& writeAlignment_Faser04.log" >>./aligndb_copy.sh
 cat aligndb_template_tail.sh >>./aligndb_copy.sh
 chmod 755 ./aligndb_copy.sh
@@ -66,15 +64,14 @@ echo "=== Finished aligndb_copy.sh ==="
 # Build the command based on THREEST and FOURST flags
 FILE_PATH="/eos/experiment/faser/raw/${YEAR}/${RUN}/Faser-Physics-${RUN}-${FILE}.raw"
 if [ "$THREEST" = "True" ]; then
-    CMD="python $TEMP_DIR/faser_reco_alignment.py \"$FILE_PATH\" --alignment --noBackward --noIFT"
+    CMD="python $SRC_DIR/faser_reco_alignment.py \"$FILE_PATH\" --alignment --noBackward --noIFT"
 elif [ "$FOURST" = "True" ]; then
-    CMD="python $TEMP_DIR/faser_reco_alignment.py \"$FILE_PATH\" --alignment --noBackward"
+    CMD="python $SRC_DIR/faser_reco_alignment.py \"$FILE_PATH\" --alignment --noBackward"
 fi
 echo "=== Running command: $CMD ==="
 eval $CMD
 
 # Move output files to kfalignment directory
-mkdir -p ../../2kfalignment
-mv Faser-Physics-*kfalignment.root "../../2kfalignment/kfalignment_${RUN}_${FILE}.root"
+mv Faser-Physics-*kfalignment.root "$RECO_DIR/../2kfalignment/kfalignment_${RUN}_${FILE}.root"
 rm Faser-Physics-*-xAOD.root
 echo "=== Finished alignment ==="

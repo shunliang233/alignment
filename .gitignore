@@ -13,6 +13,8 @@ Thumbs.db
 # 编译器和调试器文件
 
 # 日志和临时文件
+/main.log
+/auto_iter.log
 
 # HTCondor作业提交文件
 submit_unbiased.sub
@@ -25,3 +27,4 @@ submit_unbiased.sub
 # 未完成项目
 /auto-copy/
 /auto_iter_test.py
+/root/
