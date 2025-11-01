@@ -23,9 +23,9 @@ mkdir -p logs
 echo "=== Create logs directory ==="
 
 # Setup environment
-cd /eos/home-s/shunlian/Alignment #Your Directory to Calypso
+cd /eos/user/c/chiw/FASER/Alignment #Your Directory to Calypso
 source env.sh
-cd align/2.1raw2reco #Your Directory to runAlignment.sh
+cd /eos/user/c/chiw/FASER/Alignment/Alignment-Shunliang #Your Directory to runAlignment.sh
 TEMP_DIR=$(pwd)
 echo "=== Setup Environment ==="
 
