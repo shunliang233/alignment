@@ -10,7 +10,7 @@ The script will find the specified raw files in `/eos/experiment/faser/raw/` and
 
 ## FASER Alignment Process
 
-The FASER alignment process uses HTCondor DAGMan for automated iteration. The following diagram illustrates the complete workflow:
+The FASER alignment process uses HTCondor for automated parallel processing with iterative refinement. The following diagram illustrates the complete workflow:
 
 ```mermaid
 flowchart TD
@@ -84,7 +84,7 @@ flowchart TD
 ### Key Components:
 
 1. **auto_iter.py**: Main orchestration script that manages the iterative alignment process
-2. **HTCondor Jobs**: Parallel processing of raw data files using HTCondor DAGMan
+2. **HTCondor Jobs**: Parallel processing of raw data files using HTCondor job submission and monitoring
 3. **runAlignment.sh**: Shell script executed on each HTCondor node for individual raw file processing
 4. **faser_reco_alignment.py**: FASER reconstruction algorithm based on ATLAS Athena framework
 5. **Millepede**: Alignment algorithm that processes all kfalignment data to generate new alignment constants
