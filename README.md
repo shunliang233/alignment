@@ -14,61 +14,61 @@ The FASER alignment process uses HTCondor for automated parallel processing with
 
 ```mermaid
 flowchart TD
-    Start([Start: auto_iter.py]) --> Init[Initialize Parameters<br/>Year, Run, Files, Iterations]
-    Init --> CreateDirs[Create Work Directory<br/>Y_year_R_run_F_files]
-    CreateDirs --> IterLoop{Iteration Loop<br/>i = 1 to N}
+    Start(["Start: auto_iter.py"]) --> Init["Initialize Parameters<br/>Year, Run, Files, Iterations"]
+    Init --> CreateDirs["Create Work Directory<br/>Y_year_R_run_F_files"]
+    CreateDirs --> IterLoop{"Iteration Loop<br/>i = 1 to N"}
     
-    IterLoop -->|For each iteration| IterSetup[Setup Iteration Directory<br/>iter_i/1reco, 2kfalignment, 3millepede]
+    IterLoop -->|"For each iteration"| IterSetup["Setup Iteration Directory<br/>iter_i: 1reco, 2kfalignment, 3millepede"]
     
-    IterSetup --> PrepAlign{First Iteration?}
-    PrepAlign -->|Yes| CreateEmpty[Create Empty<br/>inputforalign.txt]
-    PrepAlign -->|No| CopyAlign[Copy inputforalign.txt<br/>from previous iteration]
+    IterSetup --> PrepAlign{"First Iteration?"}
+    PrepAlign -->|"Yes"| CreateEmpty["Create Empty<br/>inputforalign.txt"]
+    PrepAlign -->|"No"| CopyAlign["Copy inputforalign.txt<br/>from previous iteration"]
     
-    CreateEmpty --> PrepCondor[Prepare HTCondor Submit File]
+    CreateEmpty --> PrepCondor["Prepare HTCondor Submit File"]
     CopyAlign --> PrepCondor
     
-    PrepCondor --> SubmitJobs[Submit HTCondor Jobs<br/>condor_submit -spool]
+    PrepCondor --> SubmitJobs["Submit HTCondor Jobs<br/>condor_submit -spool"]
     
-    SubmitJobs --> ParallelReco[Parallel Reconstruction Jobs<br/>One per raw file]
+    SubmitJobs --> ParallelReco["Parallel Reconstruction Jobs<br/>One per raw file"]
     
-    ParallelReco --> RecoJob1[HTCondor Job 1:<br/>runAlignment.sh]
-    ParallelReco --> RecoJob2[HTCondor Job 2:<br/>runAlignment.sh]
-    ParallelReco --> RecoJobN[HTCondor Job N:<br/>runAlignment.sh]
+    ParallelReco --> RecoJob1["HTCondor Job 1<br/>runAlignment.sh"]
+    ParallelReco --> RecoJob2["HTCondor Job 2<br/>runAlignment.sh"]
+    ParallelReco --> RecoJobN["HTCondor Job N<br/>runAlignment.sh"]
     
-    RecoJob1 --> SetupEnv1[Setup ATLAS Environment]
-    RecoJob2 --> SetupEnv2[Setup ATLAS Environment]
-    RecoJobN --> SetupEnvN[Setup ATLAS Environment]
+    RecoJob1 --> SetupEnv1["Setup ATLAS Environment"]
+    RecoJob2 --> SetupEnv2["Setup ATLAS Environment"]
+    RecoJobN --> SetupEnvN["Setup ATLAS Environment"]
     
-    SetupEnv1 --> SetupDB1[Setup Alignment Database<br/>aligndb_copy.sh]
-    SetupEnv2 --> SetupDB2[Setup Alignment Database<br/>aligndb_copy.sh]
-    SetupEnvN --> SetupDBN[Setup Alignment Database<br/>aligndb_copy.sh]
+    SetupEnv1 --> SetupDB1["Setup Alignment Database<br/>aligndb_copy.sh"]
+    SetupEnv2 --> SetupDB2["Setup Alignment Database<br/>aligndb_copy.sh"]
+    SetupEnvN --> SetupDBN["Setup Alignment Database<br/>aligndb_copy.sh"]
     
-    SetupDB1 --> RunReco1[Run Reconstruction<br/>faser_reco_alignment.py]
-    SetupDB2 --> RunReco2[Run Reconstruction<br/>faser_reco_alignment.py]
-    SetupDBN --> RunRecoN[Run Reconstruction<br/>faser_reco_alignment.py]
+    SetupDB1 --> RunReco1["Run Reconstruction<br/>faser_reco_alignment.py"]
+    SetupDB2 --> RunReco2["Run Reconstruction<br/>faser_reco_alignment.py"]
+    SetupDBN --> RunRecoN["Run Reconstruction<br/>faser_reco_alignment.py"]
     
-    RunReco1 --> Output1[Output: kfalignment_*.root]
-    RunReco2 --> Output2[Output: kfalignment_*.root]
-    RunRecoN --> OutputN[Output: kfalignment_*.root]
+    RunReco1 --> Output1["Output: kfalignment ROOT files"]
+    RunReco2 --> Output2["Output: kfalignment ROOT files"]
+    RunRecoN --> OutputN["Output: kfalignment ROOT files"]
     
-    Output1 --> Monitor[Monitor HTCondor Jobs<br/>condor_q every 5 minutes]
+    Output1 --> Monitor["Monitor HTCondor Jobs<br/>condor_q every 5 minutes"]
     Output2 --> Monitor
     OutputN --> Monitor
     
-    Monitor --> CheckStatus{All Jobs<br/>Complete?}
-    CheckStatus -->|No: idle or running| Monitor
-    CheckStatus -->|Hold| ErrorHandle[Error: Jobs on Hold]
-    CheckStatus -->|Yes: all done| CollectResults[Collect kfalignment files<br/>in 2kfalignment/]
+    Monitor --> CheckStatus{"All Jobs<br/>Complete?"}
+    CheckStatus -->|"No: idle or running"| Monitor
+    CheckStatus -->|"Hold"| ErrorHandle["Error: Jobs on Hold"]
+    CheckStatus -->|"Yes: all done"| CollectResults["Collect kfalignment files<br/>in 2kfalignment directory"]
     
-    ErrorHandle --> End([Error Exit])
+    ErrorHandle --> End(["Error Exit"])
     
-    CollectResults --> RunMille[Run Millepede Algorithm<br/>millepede/bin/millepede.py]
+    CollectResults --> RunMille["Run Millepede Algorithm<br/>millepede/bin/millepede.py"]
     
-    RunMille --> GenConstants[Generate New Alignment Constants<br/>Update inputforalign.txt]
+    RunMille --> GenConstants["Generate New Alignment Constants<br/>Update inputforalign.txt"]
     
-    GenConstants --> CheckIter{More<br/>Iterations?}
-    CheckIter -->|Yes| IterLoop
-    CheckIter -->|No| Complete([Complete: Final Alignment Constants])
+    GenConstants --> CheckIter{"More<br/>Iterations?"}
+    CheckIter -->|"Yes"| IterLoop
+    CheckIter -->|"No"| Complete(["Complete: Final Alignment Constants"])
     
     style Start fill:#90EE90
     style Complete fill:#90EE90
