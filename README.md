@@ -1,12 +1,12 @@
 # Auto Iteration by Python Script
-This package mainly submit condor reconstruction jobs and do millepede iteratively.
+This package mainly submits HTCondor reconstruction jobs and does millepede alignment iteratively.
 
-The `auto_iter.py` script can do iteration automatically if run as a daemon like:
+The `auto_iter.py` script can do iteration automatically if run as a daemon, like:
 ```bash
 nohup python3 auto_iter.py -y 2023 -r 011705 -f 450-500 -i 10 &>>auto_iter.log &
 ```
 
-The script will find the specified raw files in `/eos/experiment/faser/raw/` and repeat the iteration for `10` times as specified by `-i` operation.
+The script will find the specified raw files in `/eos/experiment/faser/raw/` and repeat the iteration 10` times as specified by the `-i` operation.
 
 > Suggestion from Chi Wang: `nohup` is an unsatisfactory solution on `lxplus`. An alternative solution is organizing the jobs collectively using HTCondor DAGMan, as is the present solution for FASER prompt-reco and MC production. (See, for example, repository at https://gitlab.cern.ch/faser/offline/mcp)
 
@@ -54,7 +54,7 @@ It is generally recommended to test after installation (takes about 10s):
 
 > :exclamation: Attention: Replace `/path/to/your/pede/` with the actual `pede` installation path.
 >
-> :exclamation: Attention: It is strongly suggested that `pede` is installed in the environment specified earlier, so as to ensure consistency in terms of `ROOT` version. Issues from `ROOT` version incompatibility has been reported.
+> :exclamation: Attention: It is strongly suggested that `pede` is installed in the environment specified earlier, so as to ensure consistency in terms of `ROOT` version. Issues from `ROOT` version incompatibility have been reported.
 
 #### Configuring Environment Variables
 
@@ -71,21 +71,21 @@ export LD_LIBRARY_PATH=/your/path/to/pede:$LD_LIBRARY_PATH
 
 ### Basic usage
 ```bash
-python main.py --year 2023 --run 011705 --file 400 --calypso_path /path/to/calypso/install
+python main.py --year 2023 --run 011705 --file 400 --iteration 1 --calypso_path /path/to/calypso/install
 # Or use short options
-python main.py -y 2023 -r 11705 -f 400 --calypso_path /path/to/calypso/install
+python main.py -y 2023 -r 11705 -f 400 -i 1 --calypso_path /path/to/calypso/install
 ```
 
 ### Batch processing multiple raw files
 ```bash
 # Use range format start-end
-python main.py --year 2023 --run 011705 --file 400-450 --calypso_path /path/to/calypso/install
+python main.py --year 2023 --run 011705 --file 400-450 --iteration 1 --calypso_path /path/to/calypso/install
 
 # Use range format start:end
-python main.py --year 2023 --run 011705 --file 400:450 --calypso_path /path/to/calypso/install
+python main.py --year 2023 --run 011705 --file 400:450 --iteration 1 --calypso_path /path/to/calypso/install
 
 # Short option form
-python main.py -y 2023 -r 11705 -f 400-450 --calypso_path /path/to/calypso/install
+python main.py -y 2023 -r 11705 -f 400-450 -i 1 --calypso_path /path/to/calypso/install
 ```
 
 ### Parameter description
@@ -94,7 +94,7 @@ python main.py -y 2023 -r 11705 -f 400-450 --calypso_path /path/to/calypso/insta
 - `--file, -f`: Single raw file number (e.g.: 400) or range (e.g.: 400-450 or 400:450)
 - `--fourst`: Run 4-station mode (optional, off by default)
 - `--threest`: Run 3-station mode (optional, on by default)
-- `--env_script`: Path to environment setup script. Will be created if does not exist. (default: reco_condor_env.sh)
+- `--env_script`: Path to environment setup script. Will be created if it does not exist. (default: reco_condor_env.sh)
 - `--calypso_path`: Path to Calypso installation. Required if env_script does not exist.
 
 
@@ -116,14 +116,28 @@ The process is manifestly integrated inside `millepede/bin/millepede.py` script,
 
 * Ensure that the `pede` path is added to `$PATH` and `$LD_LIBRARY_PATH`.
 
-* Execute the `millepede/bin/millepede.py` script from any directory, specifying the input file path using `-i` argument:
+* Execute the `millepede/bin/millepede.py` script from any directory, specifying the input file path using the `-i` argument:
     ```bash
     python /path/to/cloned/repo/millepede/bin/millepede.py -i /path/to/alignment/workspace
     ```
 
-    The `/path/to/alignment/workspace` should be the path to the `1reco` output path from the previous reco jobs, for example `/eos/user/c/chiw/FASER/Alignment/Alignment-Shunliang/Y2023_R011705_F400-450/iter01/1reco/`.
+    The `/path/to/alignment/workspace` should be the path to the `1reco` output path from the previous reco jobs, for example,`/eos/user/c/chiw/FASER/Alignment/Alignment-Shunliang/Y2023_R011705_F400-450/iter01/1reco/`.
 
-`Millepede`  typycally takes only a few minutes for root files from 50 raw files.
+`Millepede` typically takes only a few minutes for root files from 50 raw files.
+
+### Iterate with Alignment Constants
+
+Iteration with alignment constants is necessary before we arrive at a satisfactory result. Alignment constants are loaded automatically for the next round of reconstruction by the `main.py`:
+
+```bash
+python main.py -y 2023 -r 11705 -f 400 -i 1 --calypso_path /path/to/calypso/install
+```
+
+Submission of HTCondor jobs is automatically done here again. Running `Millepede` after acquiring the reco results would be very much the same.
+
+### Alignment Process Diagram
+
+
 
 ## :construction: Auto-Iteration Using HTCondor DAGman
 
