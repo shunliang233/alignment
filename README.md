@@ -15,10 +15,10 @@ The FASER alignment process uses HTCondor for automated parallel processing with
 ```mermaid
 flowchart TD
     Start([Start: auto_iter.py]) --> Init[Initialize Parameters<br/>Year, Run, Files, Iterations]
-    Init --> CreateDirs[Create Work Directory<br/>Y{year}_R{run}_F{files}]
+    Init --> CreateDirs[Create Work Directory<br/>Y_year_R_run_F_files]
     CreateDirs --> IterLoop{Iteration Loop<br/>i = 1 to N}
     
-    IterLoop -->|For each iteration| IterSetup[Setup Iteration Directory<br/>iter{i}/1reco, 2kfalignment, 3millepede]
+    IterLoop -->|For each iteration| IterSetup[Setup Iteration Directory<br/>iter_i/1reco, 2kfalignment, 3millepede]
     
     IterSetup --> PrepAlign{First Iteration?}
     PrepAlign -->|Yes| CreateEmpty[Create Empty<br/>inputforalign.txt]
