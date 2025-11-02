@@ -130,5 +130,5 @@ The process is manifestly integrated inside `millepede/bin/millepede.py` script,
 ### Log files
 After job execution, log files are saved in the `logs/` directory:
 - `job_$(Cluster)_$(Process).out` - Standard output
-- `job_$(Cluster)_$(Process).err` - Error output  
+- `job_$(Cluster)_$(Process).err` - Error output
 - `job_$(Cluster)_$(Process).log` - Condor log
