@@ -1,0 +1,25 @@
+{
+  "paths": {
+    "calypso_install": "",
+    "pede_install": "",
+    "env_script": "reco_condor_env.sh",
+    "work_dir": "",
+    "eos_output_dir": ""
+  },
+  "htcondor": {
+    "job_flavour": "longlunch",
+    "request_cpus": 1,
+    "max_retries": 3,
+    "requirements": "(Machine =!= LastRemoteHost) && (OpSysAndVer =?= \"AlmaLinux9\")"
+  },
+  "alignment": {
+    "default_iterations": 10,
+    "polling_interval_seconds": 300
+  },
+  "storage": {
+    "use_eos_for_output": true,
+    "keep_intermediate_root_files": true,
+    "keep_alignment_constants": true,
+    "cleanup_reco_temp_files": true
+  }
+}
