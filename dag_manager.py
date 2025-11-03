@@ -17,6 +17,9 @@ from config import AlignmentConfig
 class DAGManager:
     """Manages HTCondor DAG generation for alignment workflow."""
     
+    # Default HTCondor requirements
+    DEFAULT_REQUIREMENTS = "(Machine =!= LastRemoteHost) && (OpSysAndVer =?= \"AlmaLinux9\")"
+    
     def __init__(self, config: AlignmentConfig):
         """
         Initialize DAG manager.
@@ -76,7 +79,7 @@ transfer_output_files = logs/
 +JobFlavour = "{self.config.get('htcondor.job_flavour', 'longlunch')}"
 on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)
 max_retries = {self.config.get('htcondor.max_retries', 3)}
-requirements = {self.config.get('htcondor.requirements', '(Machine =!= LastRemoteHost) && (OpSysAndVer =?= "AlmaLinux9")')}
+requirements = {self.config.get('htcondor.requirements', self.DEFAULT_REQUIREMENTS)}
 
 """
         

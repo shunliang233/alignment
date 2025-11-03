@@ -13,8 +13,8 @@ echo ""
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ROOT_DIR="$( cd "${SCRIPT_DIR}/.." && pwd )"
 
-# Create temporary test directory
-TEST_DIR=$(mktemp -d -t faser-test-XXXXXX)
+# Create temporary test directory in secure location
+TEST_DIR=$(mktemp -d)
 echo "Created temporary test directory: ${TEST_DIR}"
 
 # Cleanup function
@@ -95,7 +95,7 @@ chmod +x runAlignment.sh
 touch test_env.sh
 
 # Generate DAG
-echo "Generating DAG for 2 iterations with files 400-402..."
+echo "Generating DAG for 2 iterations with range 400-402 (files 400, 401)..."
 python3 dag_manager.py -y 2023 -r 011705 -f 400-402 -i 2 --config test_config.json
 
 # Check DAG file was created
@@ -154,7 +154,8 @@ else
     exit 1
 fi
 
-# Count number of jobs (should be 2 for files 400-402, which is 400 and 401)
+# Count number of jobs (should be 2 for range 400-402: files 400 and 401)
+# Note: Python range semantics mean 400-402 excludes 402 (like range(400, 402))
 QUEUE_COUNT=$(grep -c "^queue" "${RECO_SUB}")
 if [ "${QUEUE_COUNT}" -eq 2 ]; then
     echo "✓ Correct number of reconstruction jobs (2)"
@@ -211,10 +212,11 @@ assert len(rl) == 1, "Single file count incorrect"
 assert list(rl)[0] == '00400', "Single file format incorrect"
 print("✓ Single file processing")
 
-# Test range with dash
+# Test range with dash (Python range semantics: exclusive end)
 rl = RawList('400-403')
 assert len(rl) == 3, "Range count incorrect"
 assert list(rl) == ['00400', '00401', '00402'], "Range values incorrect"
+assert str(rl) == '400-403', "Range string representation incorrect"
 print("✓ Range with dash processing")
 
 # Test range with colon
