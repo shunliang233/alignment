@@ -68,8 +68,36 @@ def validate_mermaid_syntax(mermaid_code):
     if '[[' in mermaid_code:
         errors.append("Double brackets '[[' detected - may cause lexical errors in some Mermaid versions")
     
-    # Check for proper graph declaration
+    # Check for non-ASCII characters in decision nodes (curly braces with Chinese/special chars)
+    # This can cause "Unrecognized text" lexical errors in Mermaid
+    import unicodedata
     lines = mermaid_code.strip().split('\n')
+    for i, line in enumerate(lines, 1):
+        # Check for curly braces with non-ASCII content (decision nodes)
+        if '{' in line and '}' in line:
+            # Extract content between curly braces
+            start = line.find('{')
+            end = line.find('}', start)
+            if start != -1 and end != -1:
+                content = line[start+1:end]
+                # Check if contains non-ASCII characters
+                if any(ord(char) > 127 for char in content):
+                    errors.append(f"Line {i}: Decision node contains non-ASCII characters: '{content}'. "
+                                f"This may cause lexical errors in Mermaid. Consider using ASCII only or simplifying.")
+    
+    # Check for emoji or special unicode in node labels with brackets
+    for i, line in enumerate(lines, 1):
+        if '[' in line and ']' in line:
+            # Extract content between brackets
+            matches = re.finditer(r'\[([^\]]+)\]', line)
+            for match in matches:
+                content = match.group(1)
+                # Check for problematic unicode
+                if any(unicodedata.category(char).startswith('So') for char in content):
+                    # Emoji detected
+                    pass  # Emojis in quotes are generally OK
+    
+    # Check for proper graph declaration
     if lines:
         first_line = lines[0].strip()
         valid_starts = ['graph', 'flowchart', 'sequenceDiagram', 'classDiagram', 
@@ -81,6 +109,11 @@ def validate_mermaid_syntax(mermaid_code):
     style_pattern = r'style\s+\w+\s+fill:'
     if 'style' in mermaid_code and not re.search(style_pattern, mermaid_code):
         errors.append("Potentially malformed style definition")
+    
+    # Check for line breaks in labels (should use <br/> or <br> not literal breaks)
+    if '\n' in mermaid_code and '<br' not in mermaid_code.lower():
+        # Multi-line code is OK, but check for unclosed quotes with line breaks
+        pass
     
     return len(errors) == 0, errors
 

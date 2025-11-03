@@ -176,26 +176,26 @@ The DAGman-based workflow follows this process:
 ```mermaid
 graph TD
     A[Start] --> B[Setup Iteration 1]
-    B --> C[Submit Reconstruction Jobs<br/>Iteration 1]
-    C --> C1["🔷 HTCondor Job:<br/>Reco File 1"]
-    C --> C2["🔷 HTCondor Job:<br/>Reco File 2"]
-    C --> C3["🔷 HTCondor Job:<br/>Reco File N"]
-    C1 --> D{All Reco Jobs<br/>Complete?}
+    B --> C[Submit Reconstruction Jobs Iteration 1]
+    C --> C1[HTCondor Job: Reco File 1]
+    C --> C2[HTCondor Job: Reco File 2]
+    C --> C3[HTCondor Job: Reco File N]
+    C1 --> D{All Jobs Complete?}
     C2 --> D
     C3 --> D
-    D -->|Success| E["🔷 HTCondor Job:<br/>Millepede Iteration 1"]
+    D -->|Success| E[HTCondor Job: Millepede Iter 1]
     D -->|Failure| F[Retry Failed Jobs]
     F --> C
-    E --> G{More<br/>Iterations?}
+    E --> G{More Iterations?}
     G -->|Yes| H[Setup Next Iteration]
-    H --> I[Submit Reconstruction Jobs<br/>Iteration N]
-    I --> I1["🔷 HTCondor Job:<br/>Reco File 1"]
-    I --> I2["🔷 HTCondor Job:<br/>Reco File 2"]
-    I --> I3["🔷 HTCondor Job:<br/>Reco File N"]
-    I1 --> J{All Reco Jobs<br/>Complete?}
+    H --> I[Submit Reconstruction Jobs Iteration N]
+    I --> I1[HTCondor Job: Reco File 1]
+    I --> I2[HTCondor Job: Reco File 2]
+    I --> I3[HTCondor Job: Reco File N]
+    I1 --> J{All Jobs Complete?}
     I2 --> J
     I3 --> J
-    J -->|Success| K["🔷 HTCondor Job:<br/>Millepede Iteration N"]
+    J -->|Success| K[HTCondor Job: Millepede Iter N]
     J -->|Failure| L[Retry Failed Jobs]
     L --> I
     K --> G
@@ -218,12 +218,44 @@ graph TD
 **Key Components:**
 
 1. **DAG File**: Defines job dependencies and workflow structure
-2. **Reconstruction Jobs** (Blue boxes): Multiple parallel HTCondor jobs, one per raw data file
-3. **Millepede Job** (Blue box): Single HTCondor job per iteration for alignment calculation
+2. **Reconstruction Jobs** (Blue nodes): Multiple parallel HTCondor jobs, one per raw data file
+3. **Millepede Job** (Blue node): Single HTCondor job per iteration for alignment calculation
 4. **Iteration Chaining**: Each iteration depends on previous iteration's completion
 5. **Automatic Retry**: Failed jobs are retried according to configured policy
 
-**Note**: HTCondor jobs are highlighted in blue. Each reconstruction phase submits multiple jobs (one per file), while each alignment phase submits a single Millepede job.
+**Note**: HTCondor jobs are highlighted in blue with thick borders. Each reconstruction phase submits multiple jobs (one per file), while each alignment phase submits a single Millepede job.
+
+#### Detailed Sub-Process Diagrams
+
+**Reconstruction Job Process (per file):**
+
+```mermaid
+graph LR
+    A[Raw Data File] --> B[HTCondor Job Starts]
+    B --> C[Load Environment]
+    C --> D[Setup Alignment DB]
+    D --> E[Run faser_reco_alignment.py]
+    E --> F[Generate xAOD File]
+    F --> G[Output to 2kfalignment]
+    G --> H[Job Complete]
+    
+    style B fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px
+```
+
+**Millepede Job Process (per iteration):**
+
+```mermaid
+graph LR
+    A[KF Alignment Files] --> B[HTCondor Job Starts]
+    B --> C[Load Environment]
+    C --> D[Run millepede.py]
+    D --> E[Process Alignment Data]
+    E --> F[Generate Alignment Constants]
+    F --> G[Update inputforalign.txt]
+    G --> H[Job Complete]
+    
+    style B fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px
+```
 
 ### Configuration Management
 
