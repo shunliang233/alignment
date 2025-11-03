@@ -177,15 +177,25 @@ The DAGman-based workflow follows this process:
 graph TD
     A[Start] --> B[Setup Iteration 1]
     B --> C[Submit Reconstruction Jobs<br/>Iteration 1]
-    C --> D{All Reco Jobs<br/>Complete?}
-    D -->|Success| E[Run Millepede<br/>Iteration 1]
+    C --> C1[["HTCondor Job: Reco File 1"]]
+    C --> C2[["HTCondor Job: Reco File 2"]]
+    C --> C3[["HTCondor Job: Reco File N"]]
+    C1 --> D{All Reco Jobs<br/>Complete?}
+    C2 --> D
+    C3 --> D
+    D -->|Success| E[["HTCondor Job: Millepede<br/>Iteration 1"]]
     D -->|Failure| F[Retry Failed Jobs]
     F --> C
     E --> G{More<br/>Iterations?}
     G -->|Yes| H[Setup Next Iteration]
     H --> I[Submit Reconstruction Jobs<br/>Iteration N]
-    I --> J{All Reco Jobs<br/>Complete?}
-    J -->|Success| K[Run Millepede<br/>Iteration N]
+    I --> I1[["HTCondor Job: Reco File 1"]]
+    I --> I2[["HTCondor Job: Reco File 2"]]
+    I --> I3[["HTCondor Job: Reco File N"]]
+    I1 --> J{All Reco Jobs<br/>Complete?}
+    I2 --> J
+    I3 --> J
+    J -->|Success| K[["HTCondor Job: Millepede<br/>Iteration N"]]
     J -->|Failure| L[Retry Failed Jobs]
     L --> I
     K --> G
@@ -193,10 +203,14 @@ graph TD
     
     style A fill:#90EE90
     style M fill:#90EE90
-    style E fill:#87CEEB
-    style K fill:#87CEEB
-    style C fill:#FFB6C1
-    style I fill:#FFB6C1
+    style C1 fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px
+    style C2 fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px
+    style C3 fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px
+    style E fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px
+    style I1 fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px
+    style I2 fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px
+    style I3 fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px
+    style K fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px
     style D fill:#FFD700
     style J fill:#FFD700
 ```
@@ -204,10 +218,12 @@ graph TD
 **Key Components:**
 
 1. **DAG File**: Defines job dependencies and workflow structure
-2. **Reconstruction Jobs**: Process raw data files in parallel (HTCondor jobs)
-3. **Millepede Jobs**: Perform alignment calculation after reconstruction
+2. **Reconstruction Jobs** (Blue boxes): Multiple parallel HTCondor jobs, one per raw data file
+3. **Millepede Job** (Blue box): Single HTCondor job per iteration for alignment calculation
 4. **Iteration Chaining**: Each iteration depends on previous iteration's completion
 5. **Automatic Retry**: Failed jobs are retried according to configured policy
+
+**Note**: HTCondor jobs are highlighted in blue. Each reconstruction phase submits multiple jobs (one per file), while each alignment phase submits a single Millepede job.
 
 ### Configuration Management
 
