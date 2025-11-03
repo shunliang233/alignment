@@ -1,14 +1,32 @@
-# Auto Iteration by Python Script
-This package mainly submits HTCondor reconstruction jobs and does millepede alignment iteratively.
+# FASER Alignment with HTCondor
 
-The `auto_iter.py` script can do iteration automatically if run as a daemon, like:
+This package submits HTCondor reconstruction jobs and performs Millepede alignment iteratively for the FASER experiment.
+
+## 🚀 Quick Start (Recommended: HTCondor DAGman)
+
+The **recommended approach** uses HTCondor DAGman for reliable, officially-supported workflow management on lxplus:
+
+```bash
+# 1. Setup configuration
+bash setup_config.sh
+
+# 2. Generate and submit DAG workflow
+python3 dag_manager.py -y 2023 -r 011705 -f 400-450 -i 10 --submit
+
+# 3. Monitor progress
+condor_q -dag
+```
+
+📖 **See [USAGE_GUIDE.md](USAGE_GUIDE.md) for detailed instructions and examples.**
+
+## Legacy Daemon Approach (Not Recommended)
+
+The `auto_iter.py` script can do iteration automatically if run as a daemon:
 ```bash
 nohup python3 auto_iter.py -y 2023 -r 011705 -f 450-500 -i 10 &>>auto_iter.log &
 ```
 
-The script will find the specified raw files in `/eos/experiment/faser/raw/` and repeat the iteration 10` times as specified by the `-i` operation.
-
-> Suggestion from Chi Wang: `nohup` is an unsatisfactory solution on `lxplus`. An alternative solution is organizing the jobs collectively using HTCondor DAGMan, as is the present solution for FASER prompt-reco and MC production. (See, for example, repository at https://gitlab.cern.ch/faser/offline/mcp)
+⚠️ **Note**: This daemon approach is not officially supported on lxplus. The HTCondor DAGman solution above is strongly recommended for production use.
 
 
 ## Source environment
