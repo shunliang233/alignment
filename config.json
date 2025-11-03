@@ -1,0 +1,17 @@
+{
+  "paths": {
+    "calypso_install": "",
+    "pede_install": "",
+    "env_script": "reco_condor_env.sh"
+  },
+  "htcondor": {
+    "job_flavour": "longlunch",
+    "request_cpus": 1,
+    "max_retries": 3,
+    "requirements": "(Machine =!= LastRemoteHost) && (OpSysAndVer =?= \"AlmaLinux9\")"
+  },
+  "alignment": {
+    "default_iterations": 10,
+    "polling_interval_seconds": 300
+  }
+}

@@ -139,10 +139,188 @@ Submission of HTCondor jobs is automatically done here again. Running `Millepede
 
 
 
-## :construction: Auto-Iteration Using HTCondor DAGman
+## Auto-Iteration Using HTCondor DAGman
+
+### Overview
+
+HTCondor DAGman (Directed Acyclic Graph Manager) provides a robust solution for managing iterative alignment workflows on CERN's lxplus infrastructure. Unlike daemon-based approaches, DAGman is officially supported and provides:
+
+- **Automatic job dependency management**: Ensures reconstruction completes before alignment
+- **Built-in retry logic**: Handles transient failures automatically
+- **Progress tracking**: Monitor workflow status with standard HTCondor tools
+- **No daemon required**: Eliminates need for persistent background processes
+- **Better resource management**: Integrates with HTCondor's scheduling system
+
+### Workflow Architecture
+
+The DAGman-based workflow follows this process:
+
+```mermaid
+graph TD
+    A[Start] --> B[Setup Iteration 1]
+    B --> C[Submit Reconstruction Jobs<br/>Iteration 1]
+    C --> D{All Reco Jobs<br/>Complete?}
+    D -->|Success| E[Run Millepede<br/>Iteration 1]
+    D -->|Failure| F[Retry Failed Jobs]
+    F --> C
+    E --> G{More<br/>Iterations?}
+    G -->|Yes| H[Setup Next Iteration]
+    H --> I[Submit Reconstruction Jobs<br/>Iteration N]
+    I --> J{All Reco Jobs<br/>Complete?}
+    J -->|Success| K[Run Millepede<br/>Iteration N]
+    J -->|Failure| L[Retry Failed Jobs]
+    L --> I
+    K --> G
+    G -->|No| M[Complete]
+    
+    style A fill:#90EE90
+    style M fill:#90EE90
+    style E fill:#87CEEB
+    style K fill:#87CEEB
+    style C fill:#FFB6C1
+    style I fill:#FFB6C1
+    style D fill:#FFD700
+    style J fill:#FFD700
+```
+
+**Key Components:**
+
+1. **DAG File**: Defines job dependencies and workflow structure
+2. **Reconstruction Jobs**: Process raw data files in parallel (HTCondor jobs)
+3. **Millepede Jobs**: Perform alignment calculation after reconstruction
+4. **Iteration Chaining**: Each iteration depends on previous iteration's completion
+5. **Automatic Retry**: Failed jobs are retried according to configured policy
+
+### Configuration Management
+
+Path configuration is now centralized in `config.json`:
+
+```json
+{
+  "paths": {
+    "calypso_install": "/path/to/calypso/install",
+    "pede_install": "/path/to/pede",
+    "env_script": "reco_condor_env.sh"
+  },
+  "htcondor": {
+    "job_flavour": "longlunch",
+    "request_cpus": 1,
+    "max_retries": 3,
+    "requirements": "(Machine =!= LastRemoteHost) && (OpSysAndVer =?= \"AlmaLinux9\")"
+  },
+  "alignment": {
+    "default_iterations": 10,
+    "polling_interval_seconds": 300
+  }
+}
+```
+
+**Setup:**
+1. Create configuration file:
+   ```bash
+   python config.py
+   ```
+
+2. Edit `config.json` to set your installation paths
+
+3. Validate configuration:
+   ```bash
+   python -c "from config import AlignmentConfig; c = AlignmentConfig(); c.validate_paths()"
+   ```
+
+### Basic Usage
+
+**Generate and submit a DAG workflow:**
+
+```bash
+# Generate DAG for 10 iterations
+python dag_manager.py --year 2023 --run 011705 --files 400-450 --iterations 10
+
+# Generate and auto-submit
+python dag_manager.py -y 2023 -r 011705 -f 400-450 -i 10 --submit
+```
+
+**Monitor DAG progress:**
+
+```bash
+# Check DAG status
+condor_q
+
+# View DAG node status
+condor_q -dag
+
+# Check specific DAG
+condor_q -nobatch
+
+# View DAGman log
+tail -f Y2023_R011705_F400-450/alignment.dag.dagman.out
+```
+
+**DAG Management:**
+
+```bash
+# Remove DAG from queue
+condor_rm <DAGman_job_id>
+
+# Rescue a failed DAG (retry from last successful point)
+condor_submit_dag Y2023_R011705_F400-450/alignment.dag.rescue001
+```
+
+### Generated Directory Structure
+
+```
+Y2023_R011705_F400-450/
+├── alignment.dag              # Main DAG file
+├── alignment.dag.dagman.out   # DAGman execution log
+├── alignment.dag.lib.out      # DAGman library log
+├── alignment.dag.lib.err      # DAGman library errors
+├── iter01/
+│   ├── 1reco/
+│   │   ├── reco.sub          # Reconstruction submit file
+│   │   ├── inputforalign.txt # Alignment constants (empty for iter 1)
+│   │   ├── logs/             # Job logs
+│   │   └── <run>/<file>/     # Per-file work directories
+│   ├── 2kfalignment/         # KF alignment output files
+│   └── 3millepede/
+│       ├── millepede.sub     # Millepede submit file
+│       ├── run_millepede.sh  # Millepede wrapper script
+│       └── millepede.out     # Millepede output
+├── iter02/
+│   └── ...                   # Same structure for each iteration
+└── ...
+```
+
+### Advantages over Daemon Approach
+
+| Feature | Daemon (`auto_iter.py`) | DAGman (`dag_manager.py`) |
+|---------|------------------------|---------------------------|
+| **Supported on lxplus** | ❌ Not officially supported | ✅ Officially supported |
+| **Job Dependency** | Manual polling | Automatic by HTCondor |
+| **Failure Handling** | Script-based | Built-in retry logic |
+| **Monitoring** | Custom logs | Standard HTCondor tools |
+| **Resource Usage** | Persistent process | No persistent process |
+| **Scalability** | Limited | Excellent |
+| **Recovery** | Manual intervention | Automatic rescue DAGs |
+
+### Migration from Daemon
+
+**Old approach (daemon-based):**
+```bash
+nohup python3 auto_iter.py -y 2023 -r 011705 -f 450-500 -i 10 &>>auto_iter.log &
+```
+
+**New approach (DAGman-based):**
+```bash
+python dag_manager.py -y 2023 -r 011705 -f 450-500 -i 10 --submit
+```
+
+The DAGman approach provides the same functionality with better reliability and is the recommended method for production workflows.
 
 ### Log files
 After job execution, log files are saved in the `logs/` directory:
-- `job_$(Cluster)_$(Process).out` - Standard output
-- `job_$(Cluster)_$(Process).err` - Error output
-- `job_$(Cluster)_$(Process).log` - Condor log
+- `reco_$(Process).out` - Reconstruction standard output
+- `reco_$(Process).err` - Reconstruction error output
+- `reco_$(Process).log` - Reconstruction HTCondor log
+- `millepede.out` - Millepede standard output
+- `millepede.err` - Millepede error output
+- `millepede.log` - Millepede HTCondor log
