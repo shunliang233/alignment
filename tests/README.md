@@ -17,6 +17,12 @@ This directory contains tests for validating the HTCondor DAGman-based alignment
   - Job dependency management
   - Directory structure creation
 
+- **`test_mermaid_diagrams.py`**: Tests for Mermaid diagram validation
+  - Extracts Mermaid diagrams from markdown files
+  - Validates syntax (balanced brackets, braces, parentheses)
+  - Checks for common syntax errors
+  - Optional CLI validation if mermaid-cli is installed
+
 ### Integration Tests
 
 - **`test_integration.sh`**: End-to-end integration test
@@ -34,6 +40,9 @@ This directory contains tests for validating the HTCondor DAGman-based alignment
 # Run all unit tests
 python3 tests/test_config.py -v
 python3 tests/test_dag_generation.py -v
+
+# Run Mermaid diagram validation
+python3 tests/test_mermaid_diagrams.py
 
 # Run integration test
 bash tests/test_integration.sh
@@ -66,7 +75,13 @@ The test suite covers:
    - Submit file content
    - HTCondor settings
 
-3. **Integration**
+3. **Documentation Quality**
+   - Mermaid diagram syntax validation
+   - Balanced brackets and parentheses
+   - Valid diagram type declarations
+   - Style definition correctness
+
+4. **Integration**
    - Complete workflow execution (dry run)
    - File generation
    - Directory structure

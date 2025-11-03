@@ -177,25 +177,25 @@ HTCondor DAGman（有向无环图管理器）为 CERN lxplus 基础设施上的�
 graph TD
     A[开始] --> B[设置迭代 1]
     B --> C[提交重建作业<br/>迭代 1]
-    C --> C1[["HTCondor 作业：重建文件 1"]]
-    C --> C2[["HTCondor 作业：重建文件 2"]]
-    C --> C3[["HTCondor 作业：重建文件 N"]]
+    C --> C1["🔷 HTCondor 作业:<br/>重建文件 1"]
+    C --> C2["🔷 HTCondor 作业:<br/>重建文件 2"]
+    C --> C3["🔷 HTCondor 作业:<br/>重建文件 N"]
     C1 --> D{所有重建作业<br/>完成？}
     C2 --> D
     C3 --> D
-    D -->|成功| E[["HTCondor 作业：Millepede<br/>迭代 1"]]
+    D -->|成功| E["🔷 HTCondor 作业:<br/>Millepede 迭代 1"]
     D -->|失败| F[重试失败的作业]
     F --> C
     E --> G{更多<br/>迭代？}
     G -->|是| H[设置下一次迭代]
     H --> I[提交重建作业<br/>迭代 N]
-    I --> I1[["HTCondor 作业：重建文件 1"]]
-    I --> I2[["HTCondor 作业：重建文件 2"]]
-    I --> I3[["HTCondor 作业：重建文件 N"]]
+    I --> I1["🔷 HTCondor 作业:<br/>重建文件 1"]
+    I --> I2["🔷 HTCondor 作业:<br/>重建文件 2"]
+    I --> I3["🔷 HTCondor 作业:<br/>重建文件 N"]
     I1 --> J{所有重建作业<br/>完成？}
     I2 --> J
     I3 --> J
-    J -->|成功| K[["HTCondor 作业：Millepede<br/>迭代 N"]]
+    J -->|成功| K["🔷 HTCondor 作业:<br/>Millepede 迭代 N"]
     J -->|失败| L[重试失败的作业]
     L --> I
     K --> G

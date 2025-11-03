@@ -177,25 +177,25 @@ The DAGman-based workflow follows this process:
 graph TD
     A[Start] --> B[Setup Iteration 1]
     B --> C[Submit Reconstruction Jobs<br/>Iteration 1]
-    C --> C1[["HTCondor Job: Reco File 1"]]
-    C --> C2[["HTCondor Job: Reco File 2"]]
-    C --> C3[["HTCondor Job: Reco File N"]]
+    C --> C1["🔷 HTCondor Job:<br/>Reco File 1"]
+    C --> C2["🔷 HTCondor Job:<br/>Reco File 2"]
+    C --> C3["🔷 HTCondor Job:<br/>Reco File N"]
     C1 --> D{All Reco Jobs<br/>Complete?}
     C2 --> D
     C3 --> D
-    D -->|Success| E[["HTCondor Job: Millepede<br/>Iteration 1"]]
+    D -->|Success| E["🔷 HTCondor Job:<br/>Millepede Iteration 1"]
     D -->|Failure| F[Retry Failed Jobs]
     F --> C
     E --> G{More<br/>Iterations?}
     G -->|Yes| H[Setup Next Iteration]
     H --> I[Submit Reconstruction Jobs<br/>Iteration N]
-    I --> I1[["HTCondor Job: Reco File 1"]]
-    I --> I2[["HTCondor Job: Reco File 2"]]
-    I --> I3[["HTCondor Job: Reco File N"]]
+    I --> I1["🔷 HTCondor Job:<br/>Reco File 1"]
+    I --> I2["🔷 HTCondor Job:<br/>Reco File 2"]
+    I --> I3["🔷 HTCondor Job:<br/>Reco File N"]
     I1 --> J{All Reco Jobs<br/>Complete?}
     I2 --> J
     I3 --> J
-    J -->|Success| K[["HTCondor Job: Millepede<br/>Iteration N"]]
+    J -->|Success| K["🔷 HTCondor Job:<br/>Millepede Iteration N"]
     J -->|Failure| L[Retry Failed Jobs]
     L --> I
     K --> G
