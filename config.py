@@ -118,6 +118,21 @@ class AlignmentConfig:
         """Get environment script path."""
         return self.get('paths.env_script', 'reco_condor_env.sh')
     
+    @property
+    def work_dir(self) -> Optional[str]:
+        """Get work directory path (typically on AFS)."""
+        return self.get('paths.work_dir', '')
+    
+    @property
+    def eos_output_dir(self) -> Optional[str]:
+        """Get EOS output directory path."""
+        return self.get('paths.eos_output_dir', '')
+    
+    @property
+    def use_eos_storage(self) -> bool:
+        """Check if EOS storage is enabled for output."""
+        return self.get('storage.use_eos_for_output', True)
+    
     def validate_paths(self) -> None:
         """
         Validate that configured paths exist.
@@ -145,7 +160,9 @@ def create_default_config(output_path: str = "config.json") -> None:
         "paths": {
             "calypso_install": "",
             "pede_install": "",
-            "env_script": "reco_condor_env.sh"
+            "env_script": "reco_condor_env.sh",
+            "work_dir": "",
+            "eos_output_dir": ""
         },
         "htcondor": {
             "job_flavour": "longlunch",
@@ -156,6 +173,12 @@ def create_default_config(output_path: str = "config.json") -> None:
         "alignment": {
             "default_iterations": 10,
             "polling_interval_seconds": 300
+        },
+        "storage": {
+            "use_eos_for_output": True,
+            "keep_intermediate_root_files": True,
+            "keep_alignment_constants": True,
+            "cleanup_reco_temp_files": True
         }
     }
     
@@ -164,6 +187,11 @@ def create_default_config(output_path: str = "config.json") -> None:
     
     print(f"Created default configuration file: {output_path}")
     print("Please edit this file to set your installation paths.")
+    print("\nKey configuration:")
+    print("  - paths.work_dir: AFS directory for job submission")
+    print("  - paths.eos_output_dir: EOS directory for large output files")
+    print("  - storage.use_eos_for_output: Enable EOS storage (recommended)")
+    print("\nSee STORAGE_GUIDE.md for detailed storage configuration.")
 
 
 if __name__ == "__main__":

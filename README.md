@@ -19,6 +19,30 @@ condor_q -dag
 
 📖 **See [USAGE_GUIDE.md](USAGE_GUIDE.md) for detailed instructions and examples.**
 
+📁 **See [STORAGE_GUIDE.md](STORAGE_GUIDE.md) for AFS/EOS storage configuration and performance optimization.**
+
+## Important: Storage Configuration
+
+For optimal performance on lxplus:
+- **Submit jobs from AFS** (small quota, good for job management)
+- **Store large outputs on EOS** (large quota, for root files)
+- **Keep executables on AFS** (faster access, better performance)
+
+Configure in `config.json`:
+```json
+{
+  "paths": {
+    "work_dir": "/afs/cern.ch/user/y/yourusername/alignment-work",
+    "eos_output_dir": "/eos/user/y/yourusername/faser-alignment-output"
+  },
+  "storage": {
+    "use_eos_for_output": true
+  }
+}
+```
+
+See [STORAGE_GUIDE.md](STORAGE_GUIDE.md) for complete storage setup and best practices.
+
 ## Legacy Daemon Approach (Not Recommended)
 
 The `auto_iter.py` script can do iteration automatically if run as a daemon:

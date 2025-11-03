@@ -1,4 +1,45 @@
-# How to use
+# 使用 HTCondor 进行 FASER 对齐
+
+## 🚀 快速开始（推荐：HTCondor DAGman）
+
+**推荐方法**使用 HTCondor DAGman 在 lxplus 上进行可靠的、官方支持的工作流管理：
+
+```bash
+# 1. 配置设置
+bash setup_config.sh
+
+# 2. 生成并提交 DAG 工作流
+python3 dag_manager.py -y 2023 -r 011705 -f 400-450 -i 10 --submit
+
+# 3. 监控进度
+condor_q -dag
+```
+
+📖 **详细说明请参见 [USAGE_GUIDE_cn.md](USAGE_GUIDE_cn.md)。**
+
+📁 **AFS/EOS 存储配置和性能优化请参见 [STORAGE_GUIDE_cn.md](STORAGE_GUIDE_cn.md)。**
+
+## 重要：存储配置
+
+为了在 lxplus 上获得最佳性能：
+- **从 AFS 提交作业**（小配额，适合作业管理）
+- **将大输出存储在 EOS**（大配额，用于 root 文件）
+- **将可执行文件保存在 AFS**（访问更快，性能更好）
+
+在 `config.json` 中配置：
+```json
+{
+  "paths": {
+    "work_dir": "/afs/cern.ch/user/y/yourusername/alignment-work",
+    "eos_output_dir": "/eos/user/y/yourusername/faser-alignment-output"
+  },
+  "storage": {
+    "use_eos_for_output": true
+  }
+}
+```
+
+完整存储设置和最佳实践请参见 [STORAGE_GUIDE_cn.md](STORAGE_GUIDE_cn.md)。
 
 ## Source environment
 
