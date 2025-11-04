@@ -60,6 +60,12 @@ Edit `config.json` to configure storage paths:
 - When `true`: Temporary reconstruction files are removed after iteration completes
 - When `false`: All temporary files are kept (useful for debugging)
 
+**`cleanup_database_files`** (boolean, default: true)
+- When `true`: Database files (ALLP200.db, ~100MB each) are automatically removed after each reconstruction job completes
+- When `false`: Database files are kept (can quickly fill disk quota with 50+ files)
+- **Recommended**: Keep enabled to avoid disk quota issues
+- Uses HTCondor POST scripts to clean up the `data/sqlite200/` directory for each job
+
 ## Directory Structure
 
 ### With EOS Storage (Recommended)
@@ -151,17 +157,50 @@ Typical file sizes per iteration (50 raw files):
 | Raw files | EOS (input) | ~5 GB | Input only |
 | xAOD files | EOS | ~2 GB | Optional |
 | Root files (kfalignment) | EOS | ~500 MB | Yes |
+| Database files (ALLP200.db) | AFS (temp) | ~5 GB (100MB × 50) | **Auto-cleaned** |
 | Alignment constants | AFS | ~50 KB | Yes |
 | Job logs | AFS | ~10 MB | Yes |
 | Temporary files | Temp | ~200 MB | No |
 
-**Total per iteration**: ~2.5 GB on EOS, ~10 MB on AFS
+**Total per iteration**: ~2.5 GB on EOS, ~10 MB on AFS (with cleanup enabled)
 
 **For 10 iterations**: ~25 GB on EOS, ~100 MB on AFS
 
+**Note**: Database files are automatically cleaned after each job completes (when `cleanup_database_files: true`). Without cleanup, they would consume ~5GB per iteration on AFS!
+
 ## Troubleshooting
 
-### Issue: AFS quota exceeded
+### Issue: AFS quota exceeded due to database files
+
+**Symptoms**: 
+- Jobs fail with "Disk quota exceeded"
+- Large `data/sqlite200/ALLP200.db` files (~100MB each) in reconstruction directories
+- Disk usage grows by ~5GB per iteration (50 files × 100MB)
+
+**Cause**: Database files are copied to each job's working directory and not cleaned up automatically.
+
+**Solution**:
+1. Enable automatic cleanup (default in config.json):
+   ```json
+   {
+     "storage": {
+       "cleanup_database_files": true
+     }
+   }
+   ```
+
+2. Verify cleanup scripts are added to DAG:
+   ```bash
+   grep "SCRIPT POST" Y2023_R011705_F400-450/alignment.dag
+   ```
+
+3. Manual cleanup (if needed):
+   ```bash
+   # Remove database files from all reconstruction directories
+   find Y2023_R011705_F400-450 -type d -name "data" -path "*/1reco/*" -exec rm -rf {} +
+   ```
+
+### Issue: AFS quota exceeded (general)
 
 **Symptoms**: Jobs fail with "Disk quota exceeded"
 
@@ -170,7 +209,7 @@ Typical file sizes per iteration (50 raw files):
    ```bash
    grep eos_output_dir config.json
    ```
-2. Enable cleanup:
+2. Enable all cleanup options:
    ```json
    "cleanup_reco_temp_files": true
    ```

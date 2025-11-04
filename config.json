@@ -20,6 +20,7 @@
     "use_eos_for_output": true,
     "keep_intermediate_root_files": true,
     "keep_alignment_constants": true,
-    "cleanup_reco_temp_files": true
+    "cleanup_reco_temp_files": true,
+    "cleanup_database_files": true
   }
 }

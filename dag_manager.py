@@ -93,6 +93,53 @@ queue
         
         return submit_file
     
+    def _create_cleanup_post_script(self, output_dir: Path, iteration: int, run: str, file_str: str) -> Path:
+        """
+        Create POST script to clean up database files after reconstruction job completes.
+        
+        Args:
+            output_dir: Main output directory
+            iteration: Iteration number
+            run: Run number
+            file_str: File number as string
+            
+        Returns:
+            Path to post script
+        """
+        iter_str = f"iter{iteration:02d}"
+        iter_dir = output_dir / iter_str
+        reco_dir = iter_dir / "1reco"
+        
+        post_script = reco_dir / f"post_cleanup_{file_str}.sh"
+        
+        # Path to the database directory for this specific file
+        db_path = reco_dir / run / file_str / "data"
+        
+        script_content = f"""#!/bin/bash
+# POST script to clean up database files after reconstruction job completes
+
+set -e
+
+echo "Cleaning up database files for run {run}, file {file_str}..."
+
+# Remove database directory to save disk space
+if [ -d "{db_path}" ]; then
+    rm -rf "{db_path}"
+    echo "Removed database directory: {db_path}"
+else
+    echo "Database directory not found: {db_path}"
+fi
+
+echo "Cleanup completed successfully."
+exit 0
+"""
+        
+        with open(post_script, 'w') as f:
+            f.write(script_content)
+        os.chmod(post_script, 0o755)
+        
+        return post_script
+    
     def create_millepede_submit_file(
         self,
         output_dir: Path,
@@ -223,6 +270,14 @@ queue
                 pre_script = self._create_pre_script(output_dir, it)
                 first_reco_job = reco_jobs[0]
                 dag_content += f"SCRIPT PRE {first_reco_job} {pre_script}\n"
+            
+            # Add POST scripts for cleanup if enabled
+            if self.config.cleanup_database_files:
+                dag_content += f"\n# Iteration {it} cleanup scripts\n"
+                for file_str in file_list:
+                    job_name = f"reco_{it:02d}_{file_str}"
+                    post_script = self._create_cleanup_post_script(output_dir, it, run, file_str)
+                    dag_content += f"SCRIPT POST {job_name} {post_script}\n"
             
             # Add dependencies
             dag_content += f"\n# Iteration {it} dependencies\n"
