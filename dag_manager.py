@@ -34,7 +34,7 @@ class DAGManager:
         output_dir: Path,
         year: str,
         run: str,
-        file_list: RawList,
+        file_str: str,
         iteration: int,
         fourst: bool,
         threest: bool,
@@ -42,13 +42,13 @@ class DAGManager:
         env_path: Path
     ) -> Path:
         """
-        Create HTCondor submit file for reconstruction jobs.
+        Create HTCondor submit file for a single reconstruction job.
         
         Args:
             output_dir: Directory where to create submit file
             year: Year of data taking
             run: Run number (6 digits)
-            file_list: RawList object with file numbers
+            file_str: File number as string (e.g., "00400")
             iteration: Iteration number
             fourst: Enable 4-station mode
             threest: Enable 3-station mode
@@ -61,15 +61,16 @@ class DAGManager:
         iter_str = f"iter{iteration:02d}"
         reco_dir = output_dir / iter_str / "1reco"
         
-        submit_file = reco_dir / "reco.sub"
+        # Create individual submit file for this file
+        submit_file = reco_dir / f"reco_{file_str}.sub"
         
-        submit_content = f"""# HTCondor submit file for reconstruction jobs
+        submit_content = f"""# HTCondor submit file for reconstruction job (file {file_str})
 universe = vanilla
 executable = {src_dir}/runAlignment.sh
 
-output = logs/reco_$(Process).out
-error  = logs/reco_$(Process).err
-log    = logs/reco_$(Process).log
+output = logs/reco_{file_str}.out
+error  = logs/reco_{file_str}.err
+log    = logs/reco_{file_str}.log
 
 request_cpus = {self.config.get('htcondor.request_cpus', 1)}
 should_transfer_files = YES
@@ -81,12 +82,9 @@ on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)
 max_retries = {self.config.get('htcondor.max_retries', 3)}
 requirements = {self.config.get('htcondor.requirements', self.DEFAULT_REQUIREMENTS)}
 
+arguments = {year} {run} {file_str} {fourst} {threest} {reco_dir} {src_dir} {env_path}
+queue
 """
-        
-        # Add job entries for each file
-        for file_str in file_list:
-            script_args = f"{year} {run} {file_str} {fourst} {threest} {reco_dir} {src_dir} {env_path}"
-            submit_content += f"arguments = {script_args}\nqueue\n\n"
         
         # Write submit file
         submit_file.parent.mkdir(parents=True, exist_ok=True)
@@ -198,40 +196,54 @@ queue
         
         # Create jobs for each iteration
         for it in range(1, iterations + 1):
-            # Reconstruction job
-            reco_submit = self.create_reco_submit_file(
-                output_dir, year, run, file_list, it, fourst, threest, src_dir, env_path
-            )
-            dag_content += f"JOB reco_{it:02d} {reco_submit}\n"
+            # Setup job script for each iteration
+            self._create_setup_job_script(output_dir, it)
+            
+            # Create individual reconstruction jobs for each file
+            dag_content += f"# Iteration {it} reconstruction jobs\n"
+            reco_jobs = []
+            for file_str in file_list:
+                job_name = f"reco_{it:02d}_{file_str}"
+                reco_jobs.append(job_name)
+                reco_submit = self.create_reco_submit_file(
+                    output_dir, year, run, file_str, it, fourst, threest, src_dir, env_path
+                )
+                dag_content += f"JOB {job_name} {reco_submit}\n"
             
             # Millepede job
+            dag_content += f"\n# Iteration {it} millepede job\n"
             mille_submit = self.create_millepede_submit_file(
                 output_dir, it, src_dir, env_path
             )
             dag_content += f"JOB millepede_{it:02d} {mille_submit}\n"
             
-            # Setup job script for each iteration
-            self._create_setup_job_script(output_dir, it)
-            
             # Add PRE script for iterations > 1 to copy alignment constants
+            # Apply to first reco job of the iteration
             if it > 1:
                 pre_script = self._create_pre_script(output_dir, it)
-                dag_content += f"SCRIPT PRE reco_{it:02d} {pre_script}\n"
+                first_reco_job = reco_jobs[0]
+                dag_content += f"SCRIPT PRE {first_reco_job} {pre_script}\n"
             
             # Add dependencies
             dag_content += f"\n# Iteration {it} dependencies\n"
-            dag_content += f"PARENT reco_{it:02d} CHILD millepede_{it:02d}\n"
+            # All reconstruction jobs must complete before millepede
+            for reco_job in reco_jobs:
+                dag_content += f"PARENT {reco_job} CHILD millepede_{it:02d}\n"
             
-            # Link iterations
+            # Link iterations - millepede from previous iteration must complete
+            # before any reconstruction job in the current iteration starts
             if it > 1:
-                dag_content += f"PARENT millepede_{it-1:02d} CHILD reco_{it:02d}\n"
+                for reco_job in reco_jobs:
+                    dag_content += f"PARENT millepede_{it-1:02d} CHILD {reco_job}\n"
             
             dag_content += "\n"
         
         # Add retry settings
         dag_content += "# Retry settings\n"
         for it in range(1, iterations + 1):
-            dag_content += f"RETRY reco_{it:02d} 2\n"
+            for file_str in file_list:
+                job_name = f"reco_{it:02d}_{file_str}"
+                dag_content += f"RETRY {job_name} 2\n"
             dag_content += f"RETRY millepede_{it:02d} 1\n"
         
         # Write DAG file
