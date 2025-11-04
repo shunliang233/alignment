@@ -216,7 +216,8 @@ class TestDAGManager(unittest.TestCase):
         """Test that reconstruction jobs can run in parallel."""
         output_dir = Path(self.temp_dir) / "test_parallel"
         # Use multiple files to test parallel execution
-        file_list = RawList("400-405")  # 5 files: 400-404 (end exclusive)
+        # RawList uses Python range semantics: "400-405" gives files 400, 401, 402, 403, 404
+        file_list = RawList("400-405")  # 5 files (range is end-exclusive)
         env_path = Path(self.temp_dir) / "test_env.sh"
         
         dag_file = self.dag_manager.create_dag_file(
@@ -228,25 +229,26 @@ class TestDAGManager(unittest.TestCase):
             content = f.read()
         
         # Verify individual jobs exist for each file in iteration 1
-        for file_num in range(400, 405):  # 400-404
+        # range(400, 405) generates 400, 401, 402, 403, 404 (matching RawList output)
+        for file_num in range(400, 405):
             job_name = f"reco_01_{file_num:05d}"
             self.assertIn(f"JOB {job_name}", content)
         
         # Verify each reco job is a separate DAG node (has its own submit file)
-        for file_num in range(400, 405):  # 400-404
+        for file_num in range(400, 405):
             submit_file = output_dir / "iter01" / "1reco" / f"reco_{file_num:05d}.sub"
             self.assertTrue(submit_file.exists(), 
                           f"Submit file for file {file_num} should exist")
         
         # Verify all reco jobs feed into millepede (allowing parallel execution)
-        for file_num in range(400, 405):  # 400-404
+        for file_num in range(400, 405):
             job_name = f"reco_01_{file_num:05d}"
             self.assertIn(f"PARENT {job_name} CHILD millepede_01", content)
         
         # Verify no dependencies between reco jobs (they can run in parallel)
         # Check that reco jobs don't depend on each other
-        for file_num1 in range(400, 405):  # 400-404
-            for file_num2 in range(400, 405):  # 400-404
+        for file_num1 in range(400, 405):
+            for file_num2 in range(400, 405):
                 if file_num1 != file_num2:
                     job1 = f"reco_01_{file_num1:05d}"
                     job2 = f"reco_01_{file_num2:05d}"
