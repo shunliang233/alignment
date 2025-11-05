@@ -73,11 +73,11 @@ class TestDAGManager(unittest.TestCase):
     def test_create_reco_submit_file(self):
         """Test creation of reconstruction submit file."""
         output_dir = Path(self.temp_dir) / "test_output"
-        file_list = RawList("400-402")
+        file_str = "00400"
         env_path = Path(self.temp_dir) / "test_env.sh"
         
         submit_file = self.dag_manager.create_reco_submit_file(
-            output_dir, "2023", "011705", file_list, 1,
+            output_dir, "2023", "011705", file_str, 1,
             False, True, self.src_dir, env_path
         )
         
@@ -91,8 +91,10 @@ class TestDAGManager(unittest.TestCase):
         self.assertIn("executable", content)
         self.assertIn("runAlignment.sh", content)
         self.assertIn("queue", content)
-        # Should have entries for files 400 and 401
-        self.assertEqual(content.count("queue"), 2)
+        # Should have exactly one queue statement per file
+        self.assertEqual(content.count("queue"), 1)
+        # Should contain the specific file number
+        self.assertIn("00400", content)
     
     def test_create_millepede_submit_file(self):
         """Test creation of Millepede submit file."""
@@ -135,17 +137,22 @@ class TestDAGManager(unittest.TestCase):
         with open(dag_file, 'r') as f:
             content = f.read()
         
-        # Check for job definitions
+        # Check for job definitions - should have individual jobs per file
         for i in range(1, 4):  # 3 iterations
-            self.assertIn(f"JOB reco_{i:02d}", content)
+            # Check for individual reco jobs per file
+            self.assertIn(f"JOB reco_{i:02d}_00400", content)
+            self.assertIn(f"JOB reco_{i:02d}_00401", content)
             self.assertIn(f"JOB millepede_{i:02d}", content)
         
-        # Check for dependencies
-        self.assertIn("PARENT reco_01 CHILD millepede_01", content)
-        self.assertIn("PARENT millepede_01 CHILD reco_02", content)
+        # Check for dependencies - each reco job should feed into millepede
+        self.assertIn("PARENT reco_01_00400 CHILD millepede_01", content)
+        self.assertIn("PARENT reco_01_00401 CHILD millepede_01", content)
+        self.assertIn("PARENT millepede_01 CHILD reco_02_00400", content)
+        self.assertIn("PARENT millepede_01 CHILD reco_02_00401", content)
         
         # Check for retry settings
-        self.assertIn("RETRY reco_01", content)
+        self.assertIn("RETRY reco_01_00400", content)
+        self.assertIn("RETRY reco_01_00401", content)
         self.assertIn("RETRY millepede_01", content)
     
     def test_setup_job_script(self):
@@ -179,8 +186,9 @@ class TestDAGManager(unittest.TestCase):
         
         self.assertTrue(dag_file.exists())
         
-        # Check reconstruction submit file has only one queue statement
-        reco_submit = output_dir / "iter01" / "1reco" / "reco.sub"
+        # Check individual reconstruction submit file for file 400
+        reco_submit = output_dir / "iter01" / "1reco" / "reco_00400.sub"
+        self.assertTrue(reco_submit.exists())
         with open(reco_submit, 'r') as f:
             content = f.read()
         self.assertEqual(content.count("queue"), 1)
@@ -188,11 +196,11 @@ class TestDAGManager(unittest.TestCase):
     def test_htcondor_settings_in_submit_file(self):
         """Test that HTCondor settings from config are used."""
         output_dir = Path(self.temp_dir) / "test_settings"
-        file_list = RawList("400")
+        file_str = "00400"
         env_path = Path(self.temp_dir) / "test_env.sh"
         
         submit_file = self.dag_manager.create_reco_submit_file(
-            output_dir, "2023", "011705", file_list, 1,
+            output_dir, "2023", "011705", file_str, 1,
             False, True, self.src_dir, env_path
         )
         
@@ -203,6 +211,50 @@ class TestDAGManager(unittest.TestCase):
         self.assertIn("espresso", content)  # job_flavour
         self.assertIn("request_cpus = 1", content)
         self.assertIn("max_retries = 2", content)
+    
+    def test_parallel_reconstruction_jobs_in_dag(self):
+        """Test that reconstruction jobs can run in parallel."""
+        output_dir = Path(self.temp_dir) / "test_parallel"
+        # Use multiple files to test parallel execution
+        # RawList uses Python range semantics: "400-405" gives files 400, 401, 402, 403, 404
+        file_list = RawList("400-405")  # 5 files (range is end-exclusive)
+        env_path = Path(self.temp_dir) / "test_env.sh"
+        
+        dag_file = self.dag_manager.create_dag_file(
+            output_dir, "2023", "011705", file_list, 2,
+            False, True, self.src_dir, env_path
+        )
+        
+        with open(dag_file, 'r') as f:
+            content = f.read()
+        
+        # Verify individual jobs exist for each file in iteration 1
+        # range(400, 405) generates 400, 401, 402, 403, 404 (matching RawList output)
+        for file_num in range(400, 405):
+            job_name = f"reco_01_{file_num:05d}"
+            self.assertIn(f"JOB {job_name}", content)
+        
+        # Verify each reco job is a separate DAG node (has its own submit file)
+        for file_num in range(400, 405):
+            submit_file = output_dir / "iter01" / "1reco" / f"reco_{file_num:05d}.sub"
+            self.assertTrue(submit_file.exists(), 
+                          f"Submit file for file {file_num} should exist")
+        
+        # Verify all reco jobs feed into millepede (allowing parallel execution)
+        for file_num in range(400, 405):
+            job_name = f"reco_01_{file_num:05d}"
+            self.assertIn(f"PARENT {job_name} CHILD millepede_01", content)
+        
+        # Verify no dependencies between reco jobs (they can run in parallel)
+        # Check that reco jobs don't depend on each other
+        for file_num1 in range(400, 405):
+            for file_num2 in range(400, 405):
+                if file_num1 != file_num2:
+                    job1 = f"reco_01_{file_num1:05d}"
+                    job2 = f"reco_01_{file_num2:05d}"
+                    # Should not have dependencies between reco jobs
+                    self.assertNotIn(f"PARENT {job1} CHILD {job2}", content)
+                    self.assertNotIn(f"PARENT {job2} CHILD {job1}", content)
 
 
 if __name__ == '__main__':

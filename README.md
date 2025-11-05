@@ -249,6 +249,8 @@ graph TD
 
 **Note**: HTCondor jobs are highlighted in blue with thick borders. Each reconstruction phase submits multiple jobs (one per file), while each alignment phase submits a single Millepede job.
 
+**Parallel Execution**: Each raw data file has its own DAG node and submit file, allowing HTCondor to schedule and run all reconstruction jobs in parallel across available resources. For example, with 50 files (400-450), all 50 reconstruction jobs can run simultaneously if resources are available, significantly reducing total processing time compared to sequential execution.
+
 #### Detailed Sub-Process Diagrams
 
 **Reconstruction Job Process (per file):**
@@ -366,7 +368,10 @@ Y2023_R011705_F400-450/
 ├── alignment.dag.lib.err      # DAGman library errors
 ├── iter01/
 │   ├── 1reco/
-│   │   ├── reco.sub          # Reconstruction submit file
+│   │   ├── reco_00400.sub    # Reconstruction submit file for file 400
+│   │   ├── reco_00401.sub    # Reconstruction submit file for file 401
+│   │   ├── ...               # One submit file per raw file
+│   │   ├── reco_00450.sub    # Reconstruction submit file for file 450
 │   │   ├── inputforalign.txt # Alignment constants (empty for iter 1)
 │   │   ├── logs/             # Job logs
 │   │   └── <run>/<file>/     # Per-file work directories
@@ -390,6 +395,7 @@ Y2023_R011705_F400-450/
 | **Monitoring** | Custom logs | Standard HTCondor tools |
 | **Resource Usage** | Persistent process | No persistent process |
 | **Scalability** | Limited | Excellent |
+| **Parallel Execution** | Sequential per-file processing | All files processed in parallel |
 | **Recovery** | Manual intervention | Automatic rescue DAGs |
 
 ### Migration from Daemon

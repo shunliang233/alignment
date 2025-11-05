@@ -45,8 +45,13 @@ Edit `config.json` to configure storage paths:
 ### Storage Options Explained
 
 **`use_eos_for_output`** (boolean, default: true)
-- When `true`: Large output files (root files, xAOD files) are written to EOS
-- When `false`: All output written to work_dir (use only if you have sufficient AFS space)
+- When `true`: Output files are written to `eos_output_dir` (if configured)
+- When `false`: All output written to `work_dir` (use only if you have sufficient AFS space)
+
+**Output directory selection:**
+1. If `use_eos_for_output: true` and `eos_output_dir` is configured → uses EOS
+2. If `work_dir` is configured → uses work directory
+3. Otherwise → uses script directory (not recommended for production)
 
 **`keep_intermediate_root_files`** (boolean, default: true)
 - When `true`: Root files from all iterations are kept
@@ -59,6 +64,18 @@ Edit `config.json` to configure storage paths:
 **`cleanup_reco_temp_files`** (boolean, default: true)
 - When `true`: Temporary reconstruction files are removed after iteration completes
 - When `false`: All temporary files are kept (useful for debugging)
+
+## HTCondor Execute Node Storage
+
+**Important**: Reconstruction jobs now run on HTCondor execute nodes using local scratch space, not on AFS:
+
+- **Database files** (~100MB each): Stored on execute node's local disk during job execution
+- **Root files**: Processed on execute node's local disk during job execution
+- **Automatic cleanup**: Execute node storage is automatically cleaned up by HTCondor after job completion
+- **AFS impact**: Minimal - only final output files and logs are stored on AFS
+- **No quota issues**: Up to 50 jobs can run concurrently without consuming AFS quota
+
+This design prevents disk quota issues by keeping large temporary files (database, intermediate root files) on the execute node's local disk, which typically has much more space than AFS.
 
 ## Directory Structure
 
@@ -149,19 +166,46 @@ Typical file sizes per iteration (50 raw files):
 | File Type | Location | Size per Iteration | Keep? |
 |-----------|----------|-------------------|-------|
 | Raw files | EOS (input) | ~5 GB | Input only |
-| xAOD files | EOS | ~2 GB | Optional |
-| Root files (kfalignment) | EOS | ~500 MB | Yes |
+| xAOD files | Execute node → EOS | ~2 GB | Optional |
+| Root files (kfalignment) | Execute node → EOS | ~500 MB | Yes |
+| Database files (ALLP200.db) | Execute node (temp) | ~5 GB (100MB × 50) | **Auto-cleaned** |
 | Alignment constants | AFS | ~50 KB | Yes |
 | Job logs | AFS | ~10 MB | Yes |
-| Temporary files | Temp | ~200 MB | No |
+| Temporary files | Execute node | ~200 MB | **Auto-cleaned** |
 
 **Total per iteration**: ~2.5 GB on EOS, ~10 MB on AFS
 
 **For 10 iterations**: ~25 GB on EOS, ~100 MB on AFS
 
+**Key improvements:**
+- Database files (~5GB) stored on execute node local disk, not AFS
+- Intermediate files processed on execute node
+- Only final output files copied back to EOS/AFS
+- Execute node storage automatically cleaned by HTCondor
+- **No AFS quota issues even with 50 concurrent jobs!**
+
 ## Troubleshooting
 
 ### Issue: AFS quota exceeded
+
+**Note**: This issue should no longer occur with the current implementation, as reconstruction jobs run on HTCondor execute nodes with local scratch space, not on AFS. Database files and intermediate files are stored on the execute node and automatically cleaned up.
+
+**If you still encounter quota issues:**
+
+1. Verify jobs are using execute node storage:
+   ```bash
+   # Check job output logs
+   grep "Work directory for this job" Y2023_R011705_F400-450/iter01/1reco/logs/reco_*.out
+   # Should show paths like /tmp/ or $_CONDOR_SCRATCH_DIR, not AFS paths
+   ```
+
+2. Check for old files from previous runs:
+   ```bash
+   # Find and remove old working directories
+   find Y2023_R011705_F400-450 -type d -name "011705" -path "*/1reco/*" -exec rm -rf {} +
+   ```
+
+### Issue: AFS quota exceeded (general)
 
 **Symptoms**: Jobs fail with "Disk quota exceeded"
 
@@ -170,7 +214,7 @@ Typical file sizes per iteration (50 raw files):
    ```bash
    grep eos_output_dir config.json
    ```
-2. Enable cleanup:
+2. Enable all cleanup options:
    ```json
    "cleanup_reco_temp_files": true
    ```
