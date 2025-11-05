@@ -39,7 +39,8 @@ class DAGManager:
         fourst: bool,
         threest: bool,
         src_dir: Path,
-        env_path: Path
+        env_path: Path,
+        work_dir: Optional[Path] = None
     ) -> Path:
         """
         Create HTCondor submit file for a single reconstruction job.
@@ -54,6 +55,7 @@ class DAGManager:
             threest: Enable 3-station mode
             src_dir: Source directory path
             env_path: Environment script path
+            work_dir: Directory to store submit file (defaults to output_dir)
             
         Returns:
             Path to created submit file
@@ -62,8 +64,8 @@ class DAGManager:
         reco_dir = output_dir / iter_str / "1reco"
         
         # Create individual submit file for this file
-        submit_file = reco_dir / f"reco_{file_str}.sub"
-        
+        submit_file = work_dir / iter_str / f"reco_{iter_str}_{file_str}.sub"
+
         # Determine kfalignment output directory
         kfalign_dir = output_dir / iter_str / "2kfalignment"
         
@@ -71,9 +73,9 @@ class DAGManager:
 universe = vanilla
 executable = {src_dir}/runAlignment.sh
 
-output = logs/reco_{file_str}.out
-error  = logs/reco_{file_str}.err
-log    = logs/reco_{file_str}.log
+output = logs/reco_{iter_str}_{file_str}.out
+error  = logs/reco_{iter_str}_{file_str}.err
+log    = logs/reco_{iter_str}_{file_str}.log
 
 request_cpus = {self.config.get('htcondor.request_cpus', 1)}
 should_transfer_files = YES
@@ -101,7 +103,8 @@ queue
         output_dir: Path,
         iteration: int,
         src_dir: Path,
-        env_path: Path
+        env_path: Path,
+        work_dir: Optional[Path] = None
     ) -> Path:
         """
         Create HTCondor submit file for Millepede job.
@@ -111,6 +114,7 @@ queue
             iteration: Iteration number
             src_dir: Source directory path
             env_path: Environment script path
+            work_dir: Directory to store submit file (defaults to output_dir)
             
         Returns:
             Path to created submit file
@@ -119,10 +123,10 @@ queue
         millepede_dir = output_dir / iter_str / "3millepede"
         kfalign_dir = output_dir / iter_str / "2kfalignment"
         
-        submit_file = millepede_dir / "millepede.sub"
+        submit_file = work_dir / iter_str / "millepede.sub"
         
         # Create wrapper script for millepede
-        wrapper_script = millepede_dir / "run_millepede.sh"
+        wrapper_script = work_dir / iter_str / "run_millepede.sh"
         wrapper_content = f"""#!/bin/bash
 set -e
 
@@ -174,7 +178,8 @@ queue
         fourst: bool,
         threest: bool,
         src_dir: Path,
-        env_path: Path
+        env_path: Path,
+        work_dir: Optional[Path] = None
     ) -> Path:
         """
         Create HTCondor DAG file for complete alignment workflow.
@@ -189,12 +194,17 @@ queue
             threest: Enable 3-station mode
             src_dir: Source directory path
             env_path: Environment script path
+            work_dir: Directory to store DAG file and submit files (defaults to output_dir)
             
         Returns:
             Path to created DAG file
         """
-        dag_file = output_dir / "alignment.dag"
-        
+
+        if work_dir is None:
+            work_dir = output_dir
+
+        dag_file = work_dir / "alignment.dag"
+
         dag_content = "# HTCondor DAG for FASER alignment workflow\n\n"
         
         # Create jobs for each iteration
@@ -209,14 +219,14 @@ queue
                 job_name = f"reco_{it:02d}_{file_str}"
                 reco_jobs.append(job_name)
                 reco_submit = self.create_reco_submit_file(
-                    output_dir, year, run, file_str, it, fourst, threest, src_dir, env_path
+                    output_dir, year, run, file_str, it, fourst, threest, src_dir, env_path, work_dir
                 )
                 dag_content += f"JOB {job_name} {reco_submit}\n"
             
             # Millepede job
             dag_content += f"\n# Iteration {it} millepede job\n"
             mille_submit = self.create_millepede_submit_file(
-                output_dir, it, src_dir, env_path
+                output_dir, it, src_dir, env_path, work_dir
             )
             dag_content += f"JOB millepede_{it:02d} {mille_submit}\n"
             
@@ -396,14 +406,21 @@ def main():
         # Fallback to script directory
         main_dir = src_dir / main_str
         print(f"Using script directory: {main_dir}")
+
+    dag_dir = os.path.join(
+        config.work_dir,
+        "dag_files",
+        main_str,
+    ) if config.work_dir else main_dir
     
     main_dir.mkdir(parents=True, exist_ok=True)
+    Path(dag_dir).mkdir(parents=True, exist_ok=True)
     
     # Create DAG
     dag_manager = DAGManager(config)
     dag_file = dag_manager.create_dag_file(
         main_dir, year_str, run_str, file_list, args.iterations,
-        args.fourst, args.threest, src_dir, env_path
+        args.fourst, args.threest, src_dir, env_path, Path(dag_dir)
     )
     
     print(f"\nDAG file created successfully: {dag_file}")
