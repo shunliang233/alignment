@@ -255,38 +255,6 @@ class TestDAGManager(unittest.TestCase):
                     # Should not have dependencies between reco jobs
                     self.assertNotIn(f"PARENT {job1} CHILD {job2}", content)
                     self.assertNotIn(f"PARENT {job2} CHILD {job1}", content)
-    
-    def test_cleanup_post_scripts_in_dag(self):
-        """Test that cleanup POST scripts are added to DAG when enabled."""
-        output_dir = Path(self.temp_dir) / "test_cleanup"
-        file_list = RawList("400-402")
-        env_path = Path(self.temp_dir) / "test_env.sh"
-        
-        dag_file = self.dag_manager.create_dag_file(
-            output_dir, "2023", "011705", file_list, 1,
-            False, True, self.src_dir, env_path
-        )
-        
-        with open(dag_file, 'r') as f:
-            content = f.read()
-        
-        # Verify POST scripts exist for each reco job
-        for file_num in range(400, 402):
-            job_name = f"reco_01_{file_num:05d}"
-            self.assertIn(f"SCRIPT POST {job_name}", content)
-        
-        # Verify cleanup script files exist
-        for file_num in range(400, 402):
-            file_str = f"{file_num:05d}"
-            cleanup_script = output_dir / "iter01" / "1reco" / f"post_cleanup_{file_str}.sh"
-            self.assertTrue(cleanup_script.exists(), 
-                          f"Cleanup script for file {file_num} should exist")
-            
-            # Verify script content
-            with open(cleanup_script, 'r') as f:
-                script_content = f.read()
-            self.assertIn("rm -rf", script_content)
-            self.assertIn(f"/{file_str}/data", script_content)
 
 
 if __name__ == '__main__':

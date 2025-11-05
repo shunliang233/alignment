@@ -133,11 +133,6 @@ class AlignmentConfig:
         """Check if EOS storage is enabled for output."""
         return self.get('storage.use_eos_for_output', True)
     
-    @property
-    def cleanup_database_files(self) -> bool:
-        """Check if database files should be cleaned up after jobs complete."""
-        return self.get('storage.cleanup_database_files', True)
-    
     def validate_paths(self) -> None:
         """
         Validate that configured paths exist.
@@ -183,8 +178,7 @@ def create_default_config(output_path: str = "config.json") -> None:
             "use_eos_for_output": True,
             "keep_intermediate_root_files": True,
             "keep_alignment_constants": True,
-            "cleanup_reco_temp_files": True,
-            "cleanup_database_files": True
+            "cleanup_reco_temp_files": True
         }
     }
     
