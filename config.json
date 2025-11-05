@@ -2,7 +2,8 @@
   "paths": {
     "calypso_install": "/eos/user/c/chiw/FASER/Alignment/run/",
     "pede_install": "/afs/cern.ch/user/c/chiw/public/faser-utils/pede/",
-    "env_script": "/afs/cern.ch/user/c/chiw/condor/FASER-Alignment/reco_condor_env.sh",
+    "reco_env_script": "/afs/cern.ch/user/c/chiw/condor/FASER-Alignment/reco_condor_env.sh",
+    "millepede_env_script": "/afs/cern.ch/user/c/chiw/condor/FASER-Alignment/millepede_condor_env.sh",
     "work_dir": "/afs/cern.ch/user/c/chiw/condor/FASER-Alignment/",
     "eos_output_dir": "/eos/user/c/chiw/FASER/Alignment/Alignment-Shunliang/"
   },

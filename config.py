@@ -114,9 +114,14 @@ class AlignmentConfig:
         return path
     
     @property
-    def env_script(self) -> str:
+    def reco_env_script(self) -> str:
         """Get environment script path."""
-        return self.get('paths.env_script', 'reco_condor_env.sh')
+        return self.get('paths.reco_env_script', '')
+
+    @property
+    def millepede_env_script(self) -> str:
+        """Get Millepede environment script path."""
+        return self.get('paths.millepede_env_script', '')
     
     @property
     def work_dir(self) -> Optional[str]:
@@ -160,7 +165,8 @@ def create_default_config(output_path: str = "config.json") -> None:
         "paths": {
             "calypso_install": "",
             "pede_install": "",
-            "env_script": "reco_condor_env.sh",
+            "reco_env_script": "",
+            "millepede_env_script": "",
             "work_dir": "",
             "eos_output_dir": ""
         },

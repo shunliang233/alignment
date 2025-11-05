@@ -178,7 +178,8 @@ queue
         fourst: bool,
         threest: bool,
         src_dir: Path,
-        env_path: Path,
+        reco_env_path: Path,
+        millepede_env_path: Path,
         work_dir: Optional[Path] = None
     ) -> Path:
         """
@@ -193,7 +194,8 @@ queue
             fourst: Enable 4-station mode
             threest: Enable 3-station mode
             src_dir: Source directory path
-            env_path: Environment script path
+            reco_env_path: Reconstruction environment script path
+            millepede_env_path: Millepede environment script path
             work_dir: Directory to store DAG file and submit files (defaults to output_dir)
             
         Returns:
@@ -219,14 +221,14 @@ queue
                 job_name = f"reco_{it:02d}_{file_str}"
                 reco_jobs.append(job_name)
                 reco_submit = self.create_reco_submit_file(
-                    output_dir, year, run, file_str, it, fourst, threest, src_dir, env_path, work_dir
+                    output_dir, year, run, file_str, it, fourst, threest, src_dir, reco_env_path, work_dir
                 )
                 dag_content += f"JOB {job_name} {reco_submit}\n"
             
             # Millepede job
             dag_content += f"\n# Iteration {it} millepede job\n"
             mille_submit = self.create_millepede_submit_file(
-                output_dir, it, src_dir, env_path, work_dir
+                output_dir, it, src_dir, millepede_env_path, work_dir
             )
             dag_content += f"JOB millepede_{it:02d} {mille_submit}\n"
             
@@ -388,7 +390,8 @@ def main():
     
     # Setup paths
     src_dir = Path(__file__).parent.absolute()
-    env_path = Path(config.env_script).absolute()
+    reco_env_path = Path(config.reco_env_script).absolute()
+    millepede_env_path = Path(config.millepede_env_script).absolute()
     
     # Determine output directory based on configuration
     # Use EOS output directory if configured and enabled, otherwise use work_dir or src_dir
@@ -420,7 +423,7 @@ def main():
     dag_manager = DAGManager(config)
     dag_file = dag_manager.create_dag_file(
         main_dir, year_str, run_str, file_list, args.iterations,
-        args.fourst, args.threest, src_dir, env_path, Path(dag_dir)
+        args.fourst, args.threest, src_dir, reco_env_path, millepede_env_path, Path(dag_dir)
     )
     
     print(f"\nDAG file created successfully: {dag_file}")
