@@ -7,14 +7,31 @@ This package submits HTCondor reconstruction jobs and performs Millepede alignme
 The **recommended approach** uses HTCondor DAGman for reliable, officially-supported workflow management on lxplus:
 
 ```bash
-# 1. Setup configuration
-bash setup_config.sh
+# 0. Clone this repository
+git clone --recursive https://github.com/Eric100911/faser-alignment-script.git /your/path/to/faser-alignment-script
+cd /your/path/to/faser-alignment-script/
 
-# 2. Generate and submit DAG workflow
+# 1. Compile Mille (the conversion script)
+cd millepede
+cmake -B build && cmake --build build && cmake --install build
+
+# 2. Compile pede (the alignment solver)
+git clone --depth 1 --branch V04-17-06 \
+     https://gitlab.desy.de/claus.kleinwort/millepede-ii.git /path/to/your/pede/
+cd /path/to/your/pede/
+make pede && ./pede -t
+
+# 3. Setup configuration. This script gives a default config.json.
+bash setup_config.sh
+# - Alternatively, use config.py to create config.json.
+python3 config.py
+# - Always remember to edit config.json to set your paths.
+
+# 4. Generate and submit DAG workflow
 python3 dag_manager.py -y 2023 -r 011705 -f 400-450 -i 10 --submit
 
-# 3. Monitor progress
-condor_q -dag
+# 5. Monitor progress
+condor_q -dag -nobatch
 ```
 
 📖 **See [USAGE_GUIDE.md](USAGE_GUIDE.md) for detailed instructions and examples.**
