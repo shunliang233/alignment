@@ -1,14 +1,15 @@
 #!/bin/bash
 
-# Usage: ./runAlignment.sh <YEAR> <RUN> <FILE> <FOURST> <THREEST> <IT> <ALIGN_PATH>
+# Usage: ./runAlignment.sh <YEAR> <RUN> <FILE> <FOURST> <THREEST> <RECO_DIR> <KFALIGN_DIR> <SRC_DIR> <ENV_PATH>
 YEAR=$1
 RUN=$2
 FILE=$3
 FOURST=$4
 THREEST=$5
 RECO_DIR=$6
-SRC_DIR=$7
-ENV_PATH=$8
+KFALIGN_DIR=$7
+SRC_DIR=$8
+ENV_PATH=$9
 echo "Running with parameters:"
 echo " Year: $YEAR"
 echo " Run: $RUN"
@@ -16,6 +17,7 @@ echo " File: $FILE"
 echo " FOURST: $FOURST"
 echo " THREEST: $THREEST"
 echo " RecoDir: $RECO_DIR"
+echo " KFAlignDir: $KFALIGN_DIR"
 echo " SrcDir: $SRC_DIR"
 echo " EnvPath: $ENV_PATH"
 echo ""
@@ -78,11 +80,11 @@ eval $CMD
 
 # Copy output files from execute node to final destination
 # Create output directory if it doesn't exist
-mkdir -p "$RECO_DIR/../2kfalignment"
+mkdir -p "$KFALIGN_DIR"
 
 # Copy the kfalignment root file to the final destination
-cp Faser-Physics-*kfalignment.root "$RECO_DIR/../2kfalignment/kfalignment_${RUN}_${FILE}.root"
-echo "=== Copied output file to $RECO_DIR/../2kfalignment/kfalignment_${RUN}_${FILE}.root ==="
+cp Faser-Physics-*kfalignment.root "$KFALIGN_DIR/kfalignment_${RUN}_${FILE}.root"
+echo "=== Copied output file to $KFALIGN_DIR/kfalignment_${RUN}_${FILE}.root ==="
 
 # Remove xAOD file (not needed)
 rm -f Faser-Physics-*-xAOD.root

@@ -45,8 +45,13 @@ Edit `config.json` to configure storage paths:
 ### Storage Options Explained
 
 **`use_eos_for_output`** (boolean, default: true)
-- When `true`: Large output files (root files, xAOD files) are written to EOS
-- When `false`: All output written to work_dir (use only if you have sufficient AFS space)
+- When `true`: Output files are written to `eos_output_dir` (if configured)
+- When `false`: All output written to `work_dir` (use only if you have sufficient AFS space)
+
+**Output directory selection:**
+1. If `use_eos_for_output: true` and `eos_output_dir` is configured → uses EOS
+2. If `work_dir` is configured → uses work directory
+3. Otherwise → uses script directory (not recommended for production)
 
 **`keep_intermediate_root_files`** (boolean, default: true)
 - When `true`: Root files from all iterations are kept

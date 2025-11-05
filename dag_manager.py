@@ -64,6 +64,9 @@ class DAGManager:
         # Create individual submit file for this file
         submit_file = reco_dir / f"reco_{file_str}.sub"
         
+        # Determine kfalignment output directory
+        kfalign_dir = output_dir / iter_str / "2kfalignment"
+        
         submit_content = f"""# HTCondor submit file for reconstruction job (file {file_str})
 universe = vanilla
 executable = {src_dir}/runAlignment.sh
@@ -82,7 +85,7 @@ on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)
 max_retries = {self.config.get('htcondor.max_retries', 3)}
 requirements = {self.config.get('htcondor.requirements', self.DEFAULT_REQUIREMENTS)}
 
-arguments = {year} {run} {file_str} {fourst} {threest} {reco_dir} {src_dir} {env_path}
+arguments = {year} {run} {file_str} {fourst} {threest} {reco_dir} {kfalign_dir} {src_dir} {env_path}
 queue
 """
         
@@ -377,10 +380,24 @@ def main():
     src_dir = Path(__file__).parent.absolute()
     env_path = Path(config.env_script).absolute()
     
-    # Create main directory
+    # Determine output directory based on configuration
+    # Use EOS output directory if configured and enabled, otherwise use work_dir or src_dir
     main_str = f"Y{year_str}_R{run_str}_F{str(file_list)}"
-    main_dir = src_dir / main_str
-    main_dir.mkdir(exist_ok=True)
+    
+    if config.use_eos_storage and config.eos_output_dir:
+        # Use EOS for large output files
+        main_dir = Path(config.eos_output_dir) / main_str
+        print(f"Using EOS output directory: {main_dir}")
+    elif config.work_dir:
+        # Use configured work directory
+        main_dir = Path(config.work_dir) / main_str
+        print(f"Using work directory: {main_dir}")
+    else:
+        # Fallback to script directory
+        main_dir = src_dir / main_str
+        print(f"Using script directory: {main_dir}")
+    
+    main_dir.mkdir(parents=True, exist_ok=True)
     
     # Create DAG
     dag_manager = DAGManager(config)
