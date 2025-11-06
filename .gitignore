@@ -10,6 +10,9 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
+# Editor
+.vscode
+
 # 编译器和调试器文件
 
 # 日志和临时文件
@@ -18,18 +21,21 @@ Thumbs.db
 
 # HTCondor作业提交文件
 submit_unbiased.sub
+dag_files/
 *.sub
 
 # HTCondor DAG files (generated)
 *.dag
 *.dag.*
 
-# Environment setup script (generated)
-reco_condor_env.sh
-
 # 输出文件（根据项目调整）
 /Y[0-9][0-9][0-9][0-9]*/
 /Draw/
+*.log
+*.err
+*.out
+*.stderr
+*.stdout
 
 # 包管理器目录（如果使用）
 
