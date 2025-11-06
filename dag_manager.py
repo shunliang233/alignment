@@ -106,7 +106,8 @@ queue
         iteration: int,
         src_dir: Path,
         env_path: Path,
-        work_dir: Optional[Path] = None
+        work_dir: Optional[Path] = None,
+        to_next_iter: bool = True
     ) -> Path:
         """
         Create HTCondor submit file for Millepede job.
@@ -140,7 +141,19 @@ python3 {src_dir}/millepede/bin/millepede.py -i {kfalign_dir}
 
 echo "Millepede completed successfully."
 """
-        
+        if to_next_iter:
+            next_iter_str = f"iter{iteration+1:02d}"
+            next_input = output_dir / next_iter_str / "1reco" / "inputforalign.txt"
+            wrapper_content += f"""
+echo "Transferring alignment constants to next iteration..."
+if [ -f "{output_dir / iter_str}/inputforalign.txt" ]; then
+    cp "{output_dir / iter_str}/inputforalign.txt" "{next_input}"
+    echo "Alignment constants transferred successfully."
+else
+    echo "Warning: Alignment constants not found. Using empty file."
+    touch "{next_input}"
+fi
+"""
         wrapper_script.parent.mkdir(parents=True, exist_ok=True)
         with open(wrapper_script, 'w') as f:
             f.write(wrapper_content)
@@ -232,15 +245,10 @@ queue
             # Millepede job
             dag_content += f"\n# Iteration {it} millepede job\n"
             mille_submit = self.create_millepede_submit_file(
-                output_dir, it, src_dir, millepede_env_path, work_dir
+                output_dir, it, src_dir, millepede_env_path, work_dir,
+                to_next_iter=(it < iterations)
             )
             dag_content += f"JOB millepede_{it:02d} {mille_submit}\n"
-            
-            # Add POST script for millepede to transfer alignment constants
-            if it < iterations:
-                post_script = self._create_post_script(output_dir, it, work_dir)
-                dag_content += f"SCRIPT POST millepede_{it:02d} {post_script}\n"
-            
             
             # Add dependencies
             dag_content += f"\n# Iteration {it} dependencies\n"
@@ -270,53 +278,6 @@ queue
         
         print(f"Created DAG file: {dag_file}")
         return dag_file
-
-    def _create_post_script(self, output_dir: Path, iteration: int, work_dir: Optional[Path] = None) -> Path:
-        """
-        Create POST script for transferring alignment constants to next iteration.
-        Executed after millepede job completion.
-
-        Args:
-            output_dir: Main output directory
-            iteration: Current iteration number
-            
-        Returns:
-            Path to post script
-        """
-        if work_dir is None:
-            work_dir = output_dir
-        iter_str = f"iter{iteration:02d}"
-        iter_dir = output_dir / iter_str
-        
-        post_script = work_dir / iter_str / "post_millepede.sh"
-        
-        curr_input = iter_dir / "inputforalign.txt"
-        next_iter = f"iter{iteration+1:02d}"
-        next_input = output_dir / next_iter / "1reco" / "inputforalign.txt"
-        
-        script_content = f"""#!/bin/bash
-# POST script to transfer alignment constants to next iteration
-
-set -e
-
-echo "Transferring alignment constants from iteration {iteration} to {iteration+1}..."
-
-if [ -f "{curr_input}" ]; then
-    cp "{curr_input}" "{next_input}"
-    echo "Alignment constants transferred successfully."
-else
-    echo "Warning: Current alignment constants not found. Using empty file."
-    touch "{next_input}"
-fi
-
-exit 0
-"""
-
-        with open(post_script, 'w') as f:
-            f.write(script_content)
-        os.chmod(post_script, 0o755)
-
-        return post_script
 
     def _create_setup_job_script(self, output_dir: Path, iteration: int) -> None:
         """
