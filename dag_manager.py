@@ -232,16 +232,11 @@ queue
             )
             dag_content += f"JOB millepede_{it:02d} {mille_submit}\n"
             
-            # Add PRE script for iterations > 1 to copy alignment constants
-            # Apply to first reco job of the iteration
-            if it > 1:
-                pre_script = self._create_pre_script(output_dir, it)
-                first_reco_job = reco_jobs[0]
-                dag_content += f"SCRIPT PRE {first_reco_job} {pre_script}\n"
+            # Add POST script for millepede to transfer alignment constants
+            if it < iterations:
+                post_script = self._create_post_script(output_dir, it, work_dir)
+                dag_content += f"SCRIPT POST millepede_{it:02d} {post_script}\n"
             
-            # Note: POST cleanup scripts are no longer needed because jobs now run
-            # on HTCondor execute nodes with local scratch space that is automatically
-            # cleaned up when the job completes. This prevents disk quota issues on AFS.
             
             # Add dependencies
             dag_content += f"\n# Iteration {it} dependencies\n"
@@ -271,51 +266,54 @@ queue
         
         print(f"Created DAG file: {dag_file}")
         return dag_file
-    
-    def _create_pre_script(self, output_dir: Path, iteration: int) -> Path:
+
+    def _create_post_script(self, output_dir: Path, iteration: int, work_dir: Optional[Path] = None) -> Path:
         """
-        Create PRE script for copying alignment constants from previous iteration.
-        
+        Create POST script for transferring alignment constants to next iteration.
+        Executed after millepede job completion.
+
         Args:
             output_dir: Main output directory
             iteration: Current iteration number
             
         Returns:
-            Path to pre script
+            Path to post script
         """
+        if work_dir is None:
+            work_dir = output_dir
         iter_str = f"iter{iteration:02d}"
         iter_dir = output_dir / iter_str
         
-        pre_script = iter_dir / "pre_reco.sh"
+        post_script = work_dir / iter_str / "post_millepede.sh"
         
-        prev_iter = f"iter{iteration-1:02d}"
-        prev_input = output_dir / prev_iter / "inputforalign.txt"
-        curr_input = iter_dir / "1reco" / "inputforalign.txt"
+        curr_input = iter_dir / "inputforalign.txt"
+        next_iter = f"iter{iteration+1:02d}"
+        next_input = output_dir / next_iter / "1reco" / "inputforalign.txt"
         
         script_content = f"""#!/bin/bash
-# PRE script to copy alignment constants from previous iteration
+# POST script to transfer alignment constants to next iteration
 
 set -e
 
-echo "Copying alignment constants from iteration {iteration-1} to {iteration}..."
+echo "Transferring alignment constants from iteration {iteration} to {iteration+1}..."
 
-if [ -f "{prev_input}" ]; then
-    cp "{prev_input}" "{curr_input}"
-    echo "Alignment constants copied successfully."
+if [ -f "{curr_input}" ]; then
+    cp "{curr_input}" "{next_input}"
+    echo "Alignment constants transferred successfully."
 else
-    echo "Warning: Previous alignment constants not found. Using empty file."
-    touch "{curr_input}"
+    echo "Warning: Current alignment constants not found. Using empty file."
+    touch "{next_input}"
 fi
 
 exit 0
 """
-        
-        with open(pre_script, 'w') as f:
+
+        with open(post_script, 'w') as f:
             f.write(script_content)
-        os.chmod(pre_script, 0o755)
-        
-        return pre_script
-    
+        os.chmod(post_script, 0o755)
+
+        return post_script
+
     def _create_setup_job_script(self, output_dir: Path, iteration: int) -> None:
         """
         Create setup script for an iteration (prepare directories and input files).
