@@ -10,6 +10,8 @@
   "htcondor": {
     "job_flavour": "longlunch",
     "request_cpus": 1,
+    "request_memory": "2 GB",
+    "request_disk": "2 GB",
     "max_retries": 3,
     "requirements": "(Machine =!= LastRemoteHost) && (OpSysAndVer =?= \"AlmaLinux9\")"
   },

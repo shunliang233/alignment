@@ -78,6 +78,8 @@ error  = logs/reco_{iter_str}_{file_str}.err
 log    = logs/reco_{iter_str}_{file_str}.log
 
 request_cpus = {self.config.get('htcondor.request_cpus', 1)}
+request_memory = {self.config.get('htcondor.request_memory', '2 GB')}
+request_disk = {self.config.get('htcondor.request_disk', '2 GB')}
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 transfer_output_files = logs/
@@ -153,6 +155,8 @@ error  = millepede.err
 log    = millepede.log
 
 request_cpus = 1
+request_memory = {self.config.get('htcondor.request_memory', '2 GB')}
+request_disk = {self.config.get('htcondor.request_disk', '2 GB')}
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 

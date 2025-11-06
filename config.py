@@ -173,6 +173,8 @@ def create_default_config(output_path: str = "config.json") -> None:
         "htcondor": {
             "job_flavour": "longlunch",
             "request_cpus": 1,
+            "request_memory": "2GB",
+            "request_disk": "4GB",
             "max_retries": 3,
             "requirements": "(Machine =!= LastRemoteHost) && (OpSysAndVer =?= \"AlmaLinux9\")"
         },
