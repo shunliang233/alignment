@@ -12,6 +12,12 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 
 
+# Default resource request values
+DEFAULT_MEMORY = "2 GB"
+DEFAULT_DISK = "2 GB"
+DEFAULT_CPUS = 1
+
+
 class AlignmentConfig:
     """Manages configuration for FASER alignment scripts."""
     
@@ -161,11 +167,6 @@ def create_default_config(output_path: str = "config.json") -> None:
     Args:
         output_path: Path where to create the configuration file
     """
-    # Common defaults for resource requests
-    DEFAULT_MEMORY = "2 GB"
-    DEFAULT_DISK = "2 GB"
-    DEFAULT_CPUS = 1
-    
     default_config = {
         "paths": {
             "calypso_install": "",
