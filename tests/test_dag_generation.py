@@ -33,13 +33,25 @@ class TestDAGManager(unittest.TestCase):
             "paths": {
                 "calypso_install": "/test/calypso",
                 "pede_install": "/test/pede",
-                "env_script": "test_env.sh"
+                "reco_env_script": "test_env.sh",
+                "millepede_env_script": "test_env.sh"
             },
             "htcondor": {
-                "job_flavour": "espresso",
-                "request_cpus": 1,
-                "max_retries": 2,
-                "requirements": "(Machine =!= LastRemoteHost)"
+                "requirements": "(Machine =!= LastRemoteHost)",
+                "reco": {
+                    "job_flavour": "espresso",
+                    "request_cpus": 1,
+                    "request_memory": "2 GB",
+                    "request_disk": "2 GB",
+                    "max_retries": 2
+                },
+                "millepede": {
+                    "job_flavour": "espresso",
+                    "request_cpus": 1,
+                    "request_memory": "2 GB",
+                    "request_disk": "2 GB",
+                    "max_retries": 1
+                }
             },
             "alignment": {
                 "default_iterations": 5
@@ -73,12 +85,13 @@ class TestDAGManager(unittest.TestCase):
     def test_create_reco_submit_file(self):
         """Test creation of reconstruction submit file."""
         output_dir = Path(self.temp_dir) / "test_output"
+        work_dir = Path(self.temp_dir) / "test_work"
         file_str = "00400"
         env_path = Path(self.temp_dir) / "test_env.sh"
         
         submit_file = self.dag_manager.create_reco_submit_file(
-            output_dir, "2023", "011705", file_str, 1,
-            False, True, self.src_dir, env_path
+            output_dir, 1, "2023", "011705", file_str,
+            False, True, self.src_dir, env_path, work_dir
         )
         
         # Check file was created
@@ -99,10 +112,11 @@ class TestDAGManager(unittest.TestCase):
     def test_create_millepede_submit_file(self):
         """Test creation of Millepede submit file."""
         output_dir = Path(self.temp_dir) / "test_output"
+        work_dir = Path(self.temp_dir) / "test_work"
         env_path = Path(self.temp_dir) / "test_env.sh"
         
         submit_file = self.dag_manager.create_millepede_submit_file(
-            output_dir, 1, self.src_dir, env_path
+            output_dir, 1, self.src_dir, env_path, work_dir
         )
         
         # Check file was created
@@ -122,12 +136,13 @@ class TestDAGManager(unittest.TestCase):
     def test_create_dag_file(self):
         """Test creation of complete DAG file."""
         output_dir = Path(self.temp_dir) / "test_output"
+        work_dir = Path(self.temp_dir) / "test_work"
         file_list = RawList("400-402")
         env_path = Path(self.temp_dir) / "test_env.sh"
         
         dag_file = self.dag_manager.create_dag_file(
             output_dir, "2023", "011705", file_list, 3,
-            False, True, self.src_dir, env_path
+            False, True, self.src_dir, env_path, env_path, work_dir
         )
         
         # Check file was created
@@ -176,18 +191,19 @@ class TestDAGManager(unittest.TestCase):
     def test_dag_with_single_file(self):
         """Test DAG generation with single file."""
         output_dir = Path(self.temp_dir) / "test_single"
+        work_dir = Path(self.temp_dir) / "test_single_work"
         file_list = RawList("400")
         env_path = Path(self.temp_dir) / "test_env.sh"
         
         dag_file = self.dag_manager.create_dag_file(
             output_dir, "2023", "011705", file_list, 2,
-            False, True, self.src_dir, env_path
+            False, True, self.src_dir, env_path, env_path, work_dir
         )
         
         self.assertTrue(dag_file.exists())
         
-        # Check individual reconstruction submit file for file 400
-        reco_submit = output_dir / "iter01" / "1reco" / "reco_00400.sub"
+        # Check individual reconstruction submit file for file 400 (now in work_dir)
+        reco_submit = work_dir / "iter01" / "reco_iter01_00400.sub"
         self.assertTrue(reco_submit.exists())
         with open(reco_submit, 'r') as f:
             content = f.read()
@@ -196,12 +212,13 @@ class TestDAGManager(unittest.TestCase):
     def test_htcondor_settings_in_submit_file(self):
         """Test that HTCondor settings from config are used."""
         output_dir = Path(self.temp_dir) / "test_settings"
+        work_dir = Path(self.temp_dir) / "test_settings_work"
         file_str = "00400"
         env_path = Path(self.temp_dir) / "test_env.sh"
         
         submit_file = self.dag_manager.create_reco_submit_file(
-            output_dir, "2023", "011705", file_str, 1,
-            False, True, self.src_dir, env_path
+            output_dir, 1, "2023", "011705", file_str,
+            False, True, self.src_dir, env_path, work_dir
         )
         
         with open(submit_file, 'r') as f:
@@ -215,6 +232,7 @@ class TestDAGManager(unittest.TestCase):
     def test_parallel_reconstruction_jobs_in_dag(self):
         """Test that reconstruction jobs can run in parallel."""
         output_dir = Path(self.temp_dir) / "test_parallel"
+        work_dir = Path(self.temp_dir) / "test_parallel_work"
         # Use multiple files to test parallel execution
         # RawList uses Python range semantics: "400-405" gives files 400, 401, 402, 403, 404
         file_list = RawList("400-405")  # 5 files (range is end-exclusive)
@@ -222,7 +240,7 @@ class TestDAGManager(unittest.TestCase):
         
         dag_file = self.dag_manager.create_dag_file(
             output_dir, "2023", "011705", file_list, 2,
-            False, True, self.src_dir, env_path
+            False, True, self.src_dir, env_path, env_path, work_dir
         )
         
         with open(dag_file, 'r') as f:
@@ -234,9 +252,9 @@ class TestDAGManager(unittest.TestCase):
             job_name = f"reco_01_{file_num:05d}"
             self.assertIn(f"JOB {job_name}", content)
         
-        # Verify each reco job is a separate DAG node (has its own submit file)
+        # Verify each reco job is a separate DAG node (has its own submit file in work_dir)
         for file_num in range(400, 405):
-            submit_file = output_dir / "iter01" / "1reco" / f"reco_{file_num:05d}.sub"
+            submit_file = work_dir / "iter01" / f"reco_iter01_{file_num:05d}.sub"
             self.assertTrue(submit_file.exists(), 
                           f"Submit file for file {file_num} should exist")
         
@@ -255,6 +273,74 @@ class TestDAGManager(unittest.TestCase):
                     # Should not have dependencies between reco jobs
                     self.assertNotIn(f"PARENT {job1} CHILD {job2}", content)
                     self.assertNotIn(f"PARENT {job2} CHILD {job1}", content)
+    
+    def test_separate_job_configurations(self):
+        """Test that reco and millepede jobs use separate configurations."""
+        output_dir = Path(self.temp_dir) / "test_separate_config"
+        work_dir = Path(self.temp_dir) / "test_separate_config_work"
+        file_str = "00400"
+        env_path = Path(self.temp_dir) / "test_env.sh"
+        
+        # Create reco submit file
+        reco_submit = self.dag_manager.create_reco_submit_file(
+            output_dir, 1, "2023", "011705", file_str,
+            False, True, self.src_dir, env_path, work_dir
+        )
+        
+        with open(reco_submit, 'r') as f:
+            reco_content = f.read()
+        
+        # Check reco job uses reco config
+        self.assertIn("espresso", reco_content)  # reco job_flavour from test config
+        self.assertIn("request_cpus = 1", reco_content)
+        self.assertIn("max_retries = 2", reco_content)
+        
+        # Create millepede submit file
+        millepede_submit = self.dag_manager.create_millepede_submit_file(
+            output_dir, 1, self.src_dir, env_path, work_dir
+        )
+        
+        with open(millepede_submit, 'r') as f:
+            millepede_content = f.read()
+        
+        # Check millepede job uses millepede config
+        self.assertIn("espresso", millepede_content)  # millepede job_flavour
+        self.assertIn("request_cpus = 1", millepede_content)
+        self.assertIn("max_retries = 1", millepede_content)
+    
+    def test_log_paths_use_work_dir(self):
+        """Test that log paths are in work_dir to avoid collisions."""
+        output_dir = Path(self.temp_dir) / "test_log_paths"
+        work_dir = Path(self.temp_dir) / "test_log_paths_work"
+        file_str = "00400"
+        env_path = Path(self.temp_dir) / "test_env.sh"
+        
+        # Create reco submit file
+        reco_submit = self.dag_manager.create_reco_submit_file(
+            output_dir, 1, "2023", "011705", file_str,
+            False, True, self.src_dir, env_path, work_dir
+        )
+        
+        with open(reco_submit, 'r') as f:
+            reco_content = f.read()
+        
+        # Log paths should be in work_dir/iter01/logs/
+        expected_log_dir = work_dir / "iter01" / "logs"
+        self.assertIn(str(expected_log_dir), reco_content)
+        
+        # Check that log directory was created
+        self.assertTrue(expected_log_dir.exists())
+        
+        # Create millepede submit file
+        millepede_submit = self.dag_manager.create_millepede_submit_file(
+            output_dir, 1, self.src_dir, env_path, work_dir
+        )
+        
+        with open(millepede_submit, 'r') as f:
+            millepede_content = f.read()
+        
+        # Millepede log paths should also be in work_dir/iter01/logs/
+        self.assertIn(str(expected_log_dir), millepede_content)
 
 
 if __name__ == '__main__':

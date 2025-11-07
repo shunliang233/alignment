@@ -29,12 +29,25 @@ class TestAlignmentConfig(unittest.TestCase):
             "paths": {
                 "calypso_install": "/test/calypso",
                 "pede_install": "/test/pede",
-                "env_script": "test_env.sh"
+                "reco_env_script": "test_reco_env.sh",
+                "millepede_env_script": "test_millepede_env.sh"
             },
             "htcondor": {
-                "job_flavour": "microcentury",
-                "request_cpus": 2,
-                "max_retries": 5
+                "requirements": "(Machine =!= LastRemoteHost)",
+                "reco": {
+                    "job_flavour": "microcentury",
+                    "request_cpus": 2,
+                    "request_memory": "4 GB",
+                    "request_disk": "4 GB",
+                    "max_retries": 5
+                },
+                "millepede": {
+                    "job_flavour": "espresso",
+                    "request_cpus": 1,
+                    "request_memory": "2 GB",
+                    "request_disk": "2 GB",
+                    "max_retries": 2
+                }
             },
             "alignment": {
                 "default_iterations": 15
@@ -54,7 +67,7 @@ class TestAlignmentConfig(unittest.TestCase):
         """Test loading configuration from file."""
         config = AlignmentConfig(self.config_file)
         self.assertEqual(config.get('paths.calypso_install'), '/test/calypso')
-        self.assertEqual(config.get('htcondor.request_cpus'), 2)
+        self.assertEqual(config.get('htcondor.reco.request_cpus'), 2)
     
     def test_missing_config_file(self):
         """Test error handling for missing config file."""
@@ -97,7 +110,8 @@ class TestAlignmentConfig(unittest.TestCase):
         config = AlignmentConfig(self.config_file)
         self.assertEqual(config.calypso_path, '/test/calypso')
         self.assertEqual(config.pede_path, '/test/pede')
-        self.assertEqual(config.env_script, 'test_env.sh')
+        self.assertEqual(config.reco_env_script, 'test_reco_env.sh')
+        self.assertEqual(config.millepede_env_script, 'test_millepede_env.sh')
     
     def test_missing_required_path(self):
         """Test error when required path is not configured."""

@@ -32,61 +32,63 @@ class DAGManager:
     def create_reco_submit_file(
         self, 
         output_dir: Path,
+        iteration: int,
         year: str,
         run: str,
         file_str: str,
-        iteration: int,
         fourst: bool,
         threest: bool,
         src_dir: Path,
         env_path: Path,
-        work_dir: Optional[Path] = None
+        work_dir: Path
     ) -> Path:
         """
         Create HTCondor submit file for a single reconstruction job.
         
         Args:
-            output_dir: Directory where to create submit file
+            output_dir: Main output directory for job data
+            iteration: Iteration number
             year: Year of data taking
             run: Run number (6 digits)
             file_str: File number as string (e.g., "00400")
-            iteration: Iteration number
             fourst: Enable 4-station mode
             threest: Enable 3-station mode
             src_dir: Source directory path
             env_path: Environment script path
-            work_dir: Directory to store submit file (defaults to output_dir)
+            work_dir: Work directory for DAG and log files
             
         Returns:
             Path to created submit file
         """
         iter_str = f"iter{iteration:02d}"
         reco_dir = output_dir / iter_str / "1reco"
-        
-        # Create individual submit file for this file
-        submit_file = work_dir / iter_str / f"reco_{iter_str}_{file_str}.sub"
-
-        # Determine kfalignment output directory
         kfalign_dir = output_dir / iter_str / "2kfalignment"
+        
+        # Create individual submit file for this file in work_dir
+        submit_file = work_dir / iter_str / f"reco_{iter_str}_{file_str}.sub"
+        
+        # Log files go in work_dir to avoid collisions between parallel DAGs
+        log_dir = work_dir / iter_str / "logs"
+        log_dir.mkdir(parents=True, exist_ok=True)
         
         submit_content = f"""# HTCondor submit file for reconstruction job (file {file_str})
 universe = vanilla
 executable = {src_dir}/runAlignment.sh
 
-output = logs/reco_{iter_str}_{file_str}.out
-error  = logs/reco_{iter_str}_{file_str}.err
-log    = logs/reco_{iter_str}_{file_str}.log
+output = {log_dir}/reco_{iter_str}_{file_str}.out
+error  = {log_dir}/reco_{iter_str}_{file_str}.err
+log    = {log_dir}/reco_{iter_str}_{file_str}.log
 
-request_cpus = {self.config.get('htcondor.request_cpus', 1)}
-request_memory = {self.config.get('htcondor.request_memory', '2 GB')}
-request_disk = {self.config.get('htcondor.request_disk', '2 GB')}
+request_cpus = {self.config.get('htcondor.reco.request_cpus', 1)}
+request_memory = {self.config.get('htcondor.reco.request_memory', '2 GB')}
+request_disk = {self.config.get('htcondor.reco.request_disk', '2 GB')}
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 transfer_output_files = logs/
 
-+JobFlavour = "{self.config.get('htcondor.job_flavour', 'longlunch')}"
++JobFlavour = "{self.config.get('htcondor.reco.job_flavour', 'longlunch')}"
 on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)
-max_retries = {self.config.get('htcondor.max_retries', 3)}
+max_retries = {self.config.get('htcondor.reco.max_retries', 3)}
 requirements = {self.config.get('htcondor.requirements', self.DEFAULT_REQUIREMENTS)}
 
 arguments = {year} {run} {file_str} {fourst} {threest} {reco_dir} {kfalign_dir} {src_dir} {env_path}
@@ -106,18 +108,19 @@ queue
         iteration: int,
         src_dir: Path,
         env_path: Path,
-        work_dir: Optional[Path] = None,
+        work_dir: Path,
         to_next_iter: bool = True
     ) -> Path:
         """
         Create HTCondor submit file for Millepede job.
         
         Args:
-            output_dir: Directory where to create submit file
+            output_dir: Main output directory for job data
             iteration: Iteration number
             src_dir: Source directory path
             env_path: Environment script path
-            work_dir: Directory to store submit file (defaults to output_dir)
+            work_dir: Work directory for DAG and log files
+            to_next_iter: Whether to copy results to next iteration
             
         Returns:
             Path to created submit file
@@ -126,10 +129,13 @@ queue
         millepede_dir = output_dir / iter_str / "3millepede"
         kfalign_dir = output_dir / iter_str / "2kfalignment"
         
+        # Submit file and wrapper script go in work_dir
         submit_file = work_dir / iter_str / "millepede.sub"
-        
-        # Create wrapper script for millepede
         wrapper_script = work_dir / iter_str / "run_millepede.sh"
+        
+        # Log files go in work_dir to avoid collisions between parallel DAGs
+        log_dir = work_dir / iter_str / "logs"
+        log_dir.mkdir(parents=True, exist_ok=True)
         wrapper_content = f"""#!/bin/bash
 set -e
 
@@ -163,19 +169,19 @@ fi
 universe = vanilla
 executable = {wrapper_script}
 
-output = millepede.out
-error  = millepede.err
-log    = millepede.log
+output = {log_dir}/millepede.out
+error  = {log_dir}/millepede.err
+log    = {log_dir}/millepede.log
 
-request_cpus = 1
-request_memory = {self.config.get('htcondor.request_memory', '2 GB')}
-request_disk = {self.config.get('htcondor.request_disk', '2 GB')}
+request_cpus = {self.config.get('htcondor.millepede.request_cpus', 1)}
+request_memory = {self.config.get('htcondor.millepede.request_memory', '2 GB')}
+request_disk = {self.config.get('htcondor.millepede.request_disk', '2 GB')}
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 
-+JobFlavour = "espresso"
++JobFlavour = "{self.config.get('htcondor.millepede.job_flavour', 'espresso')}"
 on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)
-max_retries = 2
+max_retries = {self.config.get('htcondor.millepede.max_retries', 2)}
 
 queue
 """
@@ -197,13 +203,13 @@ queue
         src_dir: Path,
         reco_env_path: Path,
         millepede_env_path: Path,
-        work_dir: Optional[Path] = None
+        work_dir: Path
     ) -> Path:
         """
         Create HTCondor DAG file for complete alignment workflow.
         
         Args:
-            output_dir: Main output directory
+            output_dir: Main output directory for job data
             year: Year of data taking
             run: Run number (6 digits)
             file_list: RawList object with file numbers
@@ -213,15 +219,11 @@ queue
             src_dir: Source directory path
             reco_env_path: Reconstruction environment script path
             millepede_env_path: Millepede environment script path
-            work_dir: Directory to store DAG file and submit files (defaults to output_dir)
+            work_dir: Work directory for DAG and log files
             
         Returns:
             Path to created DAG file
         """
-
-        if work_dir is None:
-            work_dir = output_dir
-
         dag_file = work_dir / "alignment.dag"
 
         dag_content = "# HTCondor DAG for FASER alignment workflow\n\n"
@@ -238,7 +240,7 @@ queue
                 job_name = f"reco_{it:02d}_{file_str}"
                 reco_jobs.append(job_name)
                 reco_submit = self.create_reco_submit_file(
-                    output_dir, year, run, file_str, it, fourst, threest, src_dir, reco_env_path, work_dir
+                    output_dir, it, year, run, file_str, fourst, threest, src_dir, reco_env_path, work_dir
                 )
                 dag_content += f"JOB {job_name} {reco_submit}\n"
             

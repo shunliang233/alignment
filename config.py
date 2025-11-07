@@ -171,12 +171,21 @@ def create_default_config(output_path: str = "config.json") -> None:
             "eos_output_dir": ""
         },
         "htcondor": {
-            "job_flavour": "longlunch",
-            "request_cpus": 1,
-            "request_memory": "2GB",
-            "request_disk": "4GB",
-            "max_retries": 3,
-            "requirements": "(Machine =!= LastRemoteHost) && (OpSysAndVer =?= \"AlmaLinux9\")"
+            "requirements": "(Machine =!= LastRemoteHost) && (OpSysAndVer =?= \"AlmaLinux9\")",
+            "reco": {
+                "job_flavour": "longlunch",
+                "request_cpus": 1,
+                "request_memory": "2 GB",
+                "request_disk": "2 GB",
+                "max_retries": 3
+            },
+            "millepede": {
+                "job_flavour": "espresso",
+                "request_cpus": 1,
+                "request_memory": "2 GB",
+                "request_disk": "2 GB",
+                "max_retries": 2
+            }
         },
         "alignment": {
             "default_iterations": 10,
