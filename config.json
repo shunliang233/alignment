@@ -11,9 +11,9 @@
     "requirements": "(Machine =!= LastRemoteHost) && (OpSysAndVer =?= \"AlmaLinux9\")",
     "reco": {
       "job_flavour": "longlunch",
-      "request_cpus": 1,
-      "request_memory": "2 GB",
-      "request_disk": "2 GB",
+      "request_cpus": 2,
+      "request_memory": "4 GB",
+      "request_disk": "8 GB",
       "max_retries": 3
     },
     "millepede": {

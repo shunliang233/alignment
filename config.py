@@ -12,10 +12,15 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 
 
-# Default resource request values
-DEFAULT_MEMORY = "2 GB"
-DEFAULT_DISK = "2 GB"
-DEFAULT_CPUS = 1
+# Default resource request values for reconstruction jobs
+DEFAULT_RECO_MEMORY = "4 GB"
+DEFAULT_RECO_DISK = "8 GB"
+DEFAULT_RECO_CPUS = 2
+
+# Default resource request values for millepede jobs
+DEFAULT_MILLEPEDE_MEMORY = "2 GB"
+DEFAULT_MILLEPEDE_DISK = "2 GB"
+DEFAULT_MILLEPEDE_CPUS = 1
 
 
 class AlignmentConfig:
@@ -180,16 +185,16 @@ def create_default_config(output_path: str = "config.json") -> None:
             "requirements": "(Machine =!= LastRemoteHost) && (OpSysAndVer =?= \"AlmaLinux9\")",
             "reco": {
                 "job_flavour": "longlunch",
-                "request_cpus": DEFAULT_CPUS,
-                "request_memory": DEFAULT_MEMORY,
-                "request_disk": DEFAULT_DISK,
+                "request_cpus": DEFAULT_RECO_CPUS,
+                "request_memory": DEFAULT_RECO_MEMORY,
+                "request_disk": DEFAULT_RECO_DISK,
                 "max_retries": 3
             },
             "millepede": {
                 "job_flavour": "espresso",
-                "request_cpus": DEFAULT_CPUS,
-                "request_memory": DEFAULT_MEMORY,
-                "request_disk": DEFAULT_DISK,
+                "request_cpus": DEFAULT_MILLEPEDE_CPUS,
+                "request_memory": DEFAULT_MILLEPEDE_MEMORY,
+                "request_disk": DEFAULT_MILLEPEDE_DISK,
                 "max_retries": 2
             }
         },
