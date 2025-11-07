@@ -20,6 +20,9 @@ class DAGManager:
     # Default HTCondor requirements
     DEFAULT_REQUIREMENTS = "(Machine =!= LastRemoteHost) && (OpSysAndVer =?= \"AlmaLinux9\")"
     
+    # Directory name for log files
+    LOGS_DIR = "logs"
+    
     def __init__(self, config: AlignmentConfig):
         """
         Initialize DAG manager.
@@ -68,7 +71,7 @@ class DAGManager:
         submit_file = work_dir / iter_str / f"reco_{iter_str}_{file_str}.sub"
         
         # Log files go in work_dir to avoid collisions between parallel DAGs
-        log_dir = work_dir / iter_str / "logs"
+        log_dir = work_dir / iter_str / self.LOGS_DIR
         log_dir.mkdir(parents=True, exist_ok=True)
         
         submit_content = f"""# HTCondor submit file for reconstruction job (file {file_str})
@@ -134,7 +137,7 @@ queue
         wrapper_script = work_dir / iter_str / "run_millepede.sh"
         
         # Log files go in work_dir to avoid collisions between parallel DAGs
-        log_dir = work_dir / iter_str / "logs"
+        log_dir = work_dir / iter_str / self.LOGS_DIR
         log_dir.mkdir(parents=True, exist_ok=True)
         wrapper_content = f"""#!/bin/bash
 set -e

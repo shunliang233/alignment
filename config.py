@@ -161,6 +161,11 @@ def create_default_config(output_path: str = "config.json") -> None:
     Args:
         output_path: Path where to create the configuration file
     """
+    # Common defaults for resource requests
+    DEFAULT_MEMORY = "2 GB"
+    DEFAULT_DISK = "2 GB"
+    DEFAULT_CPUS = 1
+    
     default_config = {
         "paths": {
             "calypso_install": "",
@@ -174,16 +179,16 @@ def create_default_config(output_path: str = "config.json") -> None:
             "requirements": "(Machine =!= LastRemoteHost) && (OpSysAndVer =?= \"AlmaLinux9\")",
             "reco": {
                 "job_flavour": "longlunch",
-                "request_cpus": 1,
-                "request_memory": "2 GB",
-                "request_disk": "2 GB",
+                "request_cpus": DEFAULT_CPUS,
+                "request_memory": DEFAULT_MEMORY,
+                "request_disk": DEFAULT_DISK,
                 "max_retries": 3
             },
             "millepede": {
                 "job_flavour": "espresso",
-                "request_cpus": 1,
-                "request_memory": "2 GB",
-                "request_disk": "2 GB",
+                "request_cpus": DEFAULT_CPUS,
+                "request_memory": DEFAULT_MEMORY,
+                "request_disk": DEFAULT_DISK,
                 "max_retries": 2
             }
         },
