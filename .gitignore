@@ -10,6 +10,9 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
+# Editor
+.vscode
+
 # 编译器和调试器文件
 
 # 日志和临时文件
@@ -19,9 +22,19 @@ Thumbs.db
 # Output
 /Y[0-9][0-9][0-9][0-9]*/
 /Draw/
+*.log
+*.err
+*.out
+*.stderr
+*.stdout
 
 # 包管理器目录（如果使用）
 
 # 未完成项目
 /auto-copy/
 /root/
+
+# Test artifacts
+.coverage
+*.cover
+htmlcov/
