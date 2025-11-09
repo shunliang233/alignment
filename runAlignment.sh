@@ -1,14 +1,15 @@
 #!/bin/bash
 
-# Usage: ./runAlignment.sh <YEAR> <RUN> <FILE> <FOURST> <THREEST> <IT> <ALIGN_PATH>
+# Usage: ./runAlignment.sh <YEAR> <RUN> <FILE> <FOURST> <THREEST> <RECO_DIR> <KFALIGN_DIR> <SRC_DIR> <ENV_PATH>
 YEAR=$1
 RUN=$2
 FILE=$3
 FOURST=$4
 THREEST=$5
 RECO_DIR=$6
-SRC_DIR=$7
-ENV_PATH=$8
+KFALIGN_DIR=$7
+SRC_DIR=$8
+ENV_PATH=$9
 echo "Running with parameters:"
 echo " Year: $YEAR"
 echo " Run: $RUN"
@@ -16,6 +17,7 @@ echo " File: $FILE"
 echo " FOURST: $FOURST"
 echo " THREEST: $THREEST"
 echo " RecoDir: $RECO_DIR"
+echo " KFAlignDir: $KFALIGN_DIR"
 echo " SrcDir: $SRC_DIR"
 echo " EnvPath: $ENV_PATH"
 echo ""
@@ -28,18 +30,23 @@ echo "=== Create logs directory on execute node ==="
 source $ENV_PATH
 echo "=== Sourced environment from $ENV_PATH ==="
 
-# Create working directory
-mkdir -p "$RECO_DIR/$RUN/$FILE"
-cd "$RECO_DIR/$RUN/$FILE"
-WORK_DIR=$(pwd)
-echo "=== Work directory for this job: $WORK_DIR ==="
+# Create working directory on HTCondor execute node (local disk, not AFS)
+# Use $_CONDOR_SCRATCH_DIR if available, otherwise use /tmp
+if [ -n "$_CONDOR_SCRATCH_DIR" ]; then
+    WORK_DIR="$_CONDOR_SCRATCH_DIR/work_${RUN}_${FILE}"
+else
+    WORK_DIR="/tmp/faser_align_${RUN}_${FILE}_$$"
+fi
+mkdir -p "$WORK_DIR"
+cd "$WORK_DIR"
+echo "=== Work directory for this job (on execute node): $WORK_DIR ==="
 
 # Setup poolcond path
 export ATLAS_POOLCOND_PATH="$WORK_DIR/data"
 export EOS_MGM_URL=root://eosuser.cern.ch
 echo "=== Setup pool path ${ATLAS_POOLCOND_PATH} ==="
 
-# Copy templates and database
+# Copy templates and database to local execute node
 cp $SRC_DIR/templates/aligndb_copy.sh ./
 cp $SRC_DIR/templates/aligndb_template_head.sh ./
 cp $SRC_DIR/templates/aligndb_template_tail.sh ./
@@ -48,7 +55,7 @@ rm -rf data
 mkdir -p data/sqlite200
 mkdir -p data/poolcond
 cp /cvmfs/faser.cern.ch/repo/sw/database/DBRelease/current/sqlite200/ALLP200.db data/sqlite200
-echo "=== Copied templates ==="
+echo "=== Copied templates and database to execute node ==="
 
 # Run aligndb_copy.sh
 rm aligndb_copy.sh
@@ -71,7 +78,21 @@ fi
 echo "=== Running command: $CMD ==="
 eval $CMD
 
-# Move output files to kfalignment directory
-mv Faser-Physics-*kfalignment.root "$RECO_DIR/../2kfalignment/kfalignment_${RUN}_${FILE}.root"
-rm Faser-Physics-*-xAOD.root
+# Copy output files from execute node to final destination
+# Create output directory if it doesn't exist
+mkdir -p "$KFALIGN_DIR"
+
+# Copy the kfalignment root file to the final destination
+cp Faser-Physics-*kfalignment.root "$KFALIGN_DIR/kfalignment_${RUN}_${FILE}.root"
+echo "=== Copied output file to $KFALIGN_DIR/kfalignment_${RUN}_${FILE}.root ==="
+
+# Remove xAOD file (not needed)
+rm -f Faser-Physics-*-xAOD.root
+
+# Cleanup: Remove working directory on execute node
+# This happens automatically when HTCondor cleans up, but we can do it explicitly
+cd /tmp
+rm -rf "$WORK_DIR"
+echo "=== Cleaned up working directory on execute node ==="
+
 echo "=== Finished alignment ==="

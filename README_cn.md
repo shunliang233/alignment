@@ -1,4 +1,45 @@
-# How to use
+# 使用 HTCondor 进行 FASER 对齐
+
+## 🚀 快速开始（推荐：HTCondor DAGman）
+
+**推荐方法**使用 HTCondor DAGman 在 lxplus 上进行可靠的、官方支持的工作流管理：
+
+```bash
+# 1. 配置设置
+bash setup_config.sh
+
+# 2. 生成并提交 DAG 工作流
+python3 dag_manager.py -y 2023 -r 011705 -f 400-450 -i 10 --submit
+
+# 3. 监控进度
+condor_q -dag
+```
+
+📖 **详细说明请参见 [USAGE_GUIDE_cn.md](USAGE_GUIDE_cn.md)。**
+
+📁 **AFS/EOS 存储配置和性能优化请参见 [STORAGE_GUIDE_cn.md](STORAGE_GUIDE_cn.md)。**
+
+## 重要：存储配置
+
+为了在 lxplus 上获得最佳性能：
+- **从 AFS 提交作业**（小配额，适合作业管理）
+- **将大输出存储在 EOS**（大配额，用于 root 文件）
+- **将可执行文件保存在 AFS**（访问更快，性能更好）
+
+在 `config.json` 中配置：
+```json
+{
+  "paths": {
+    "work_dir": "/afs/cern.ch/user/y/yourusername/alignment-work",
+    "eos_output_dir": "/eos/user/y/yourusername/faser-alignment-output"
+  },
+  "storage": {
+    "use_eos_for_output": true
+  }
+}
+```
+
+完整存储设置和最佳实践请参见 [STORAGE_GUIDE_cn.md](STORAGE_GUIDE_cn.md)。
 
 ## Source environment
 
@@ -96,11 +137,111 @@ python main.py -y 2023 -r 11705 -f 400-450 --calypso_path /path/to/calypso/insta
 - 重建的 `.root` 文件存入 `../2root_file` 目录中
 
 ### 进行对齐校准（Alignment）
-- 
 
+该过程明显集成在 `millepede/bin/millepede.py` 脚本中，因此大大简化。
+
+## 使用 HTCondor DAGman 进行自动迭代
+
+### 概述
+
+HTCondor DAGman（有向无环图管理器）为 CERN lxplus 基础设施上的迭代对齐工作流管理提供了可靠的解决方案。与基于守护进程的方法不同，DAGman 受官方支持并提供：
+
+- **自动作业依赖管理**：确保重建在对齐之前完成
+- **内置重试逻辑**：自动处理瞬时故障
+- **进度跟踪**：使用标准 HTCondor 工具监控工作流状态
+- **无需守护进程**：消除持久后台进程的需求
+- **更好的资源管理**：与 HTCondor 的调度系统集成
+
+### 工作流架构
+
+基于 DAGman 的工作流遵循以下流程：
+
+```mermaid
+graph TD
+    A[开始] --> B[设置迭代 1]
+    B --> C[提交重建作业 迭代 1]
+    C --> C1[HTCondor 作业: 重建文件 1]
+    C --> C2[HTCondor 作业: 重建文件 2]
+    C --> C3[HTCondor 作业: 重建文件 N]
+    C1 --> D{Check Complete?}
+    C2 --> D
+    C3 --> D
+    D -->|成功| E[HTCondor 作业: Millepede 迭代 1]
+    D -->|失败| F[重试失败的作业]
+    F --> C
+    E --> G{More Iterations?}
+    G -->|是| H[设置下一次迭代]
+    H --> I[提交重建作业 迭代 N]
+    I --> I1[HTCondor 作业: 重建文件 1]
+    I --> I2[HTCondor 作业: 重建文件 2]
+    I --> I3[HTCondor 作业: 重建文件 N]
+    I1 --> J{Check Complete?}
+    I2 --> J
+    I3 --> J
+    J -->|成功| K[HTCondor 作业: Millepede 迭代 N]
+    J -->|失败| L[重试失败的作业]
+    L --> I
+    K --> G
+    G -->|否| M[完成]
+    
+    style A fill:#90EE90
+    style M fill:#90EE90
+    style C1 fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px
+    style C2 fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px
+    style C3 fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px
+    style E fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px
+    style I1 fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px
+    style I2 fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px
+    style I3 fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px
+    style K fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px
+    style D fill:#FFD700
+    style J fill:#FFD700
+```
+
+**关键组件：**
+
+1. **DAG 文件**：定义作业依赖关系和工作流结构
+2. **重建作业**（蓝色节点）：多个并行 HTCondor 作业，每个原始数据文件一个作业
+3. **Millepede 作业**（蓝色节点）：每次迭代一个 HTCondor 作业用于对齐计算
+4. **迭代链接**：每次迭代取决于上一次迭代的完成
+5. **自动重试**：根据配置的策略重试失败的作业
+
+**注意**：HTCondor 作业以蓝色和粗边框突出显示。每个重建阶段提交多个作业（每个文件一个），而每个对齐阶段提交单个 Millepede 作业。
+
+#### 详细子流程图
+
+**重建作业流程（每个文件）：**
+
+```mermaid
+graph LR
+    A[原始数据文件] --> B[HTCondor 作业启动]
+    B --> C[加载环境]
+    C --> D[设置对齐数据库]
+    D --> E[运行 faser_reco_alignment.py]
+    E --> F[生成 xAOD 文件]
+    F --> G[输出到 2kfalignment]
+    G --> H[作业完成]
+    
+    style B fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px
+```
+
+**Millepede 作业流程（每次迭代）：**
+
+```mermaid
+graph LR
+    A[KF 对齐文件] --> B[HTCondor 作业启动]
+    B --> C[加载环境]
+    C --> D[运行 millepede.py]
+    D --> E[处理对齐数据]
+    E --> F[生成对齐常数]
+    F --> G[更新 inputforalign.txt]
+    G --> H[作业完成]
+    
+    style B fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px
+```
 
 ### 日志文件
-job执行后，日志文件会保存在 `logs/` 目录：
+作业执行后，日志文件会保存在 `logs/` 目录：
 - `job_$(Cluster)_$(Process).out` - 标准输出
 - `job_$(Cluster)_$(Process).err` - 错误输出  
 - `job_$(Cluster)_$(Process).log` - Condor日志
