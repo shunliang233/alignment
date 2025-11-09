@@ -19,16 +19,7 @@ Thumbs.db
 /main.log
 /auto_iter.log
 
-# HTCondor作业提交文件
-submit_unbiased.sub
-dag_files/
-*.sub
-
-# HTCondor DAG files (generated)
-*.dag
-*.dag.*
-
-# 输出文件（根据项目调整）
+# Output
 /Y[0-9][0-9][0-9][0-9]*/
 /Draw/
 *.log
@@ -41,7 +32,6 @@ dag_files/
 
 # 未完成项目
 /auto-copy/
-/auto_iter_test.py
 /root/
 
 # Test artifacts

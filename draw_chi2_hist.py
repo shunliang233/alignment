@@ -5,7 +5,7 @@ from Dataset import Dataset
 
 # python3 draw_chi2_hist.py -y 2023 -r 011705 -f 450-500
 
-def draw_chi2_hist_for_dir(in_dir, out_path):
+def draw_chi2_hist_for_dir(in_dir, out_path, iter_num, canvas):
     chain = ROOT.TChain("tree")
     for fname in os.listdir(in_dir):
         if fname.endswith(".root"):
@@ -13,12 +13,14 @@ def draw_chi2_hist_for_dir(in_dir, out_path):
     if chain.GetEntries() == 0:
         print(f"[Warning] No entries in {in_dir}")
         return
-    h_chi2 = ROOT.TH1D("h_chi2", "fitParam_chi2/ndf;chi2/ndf;Entries", 100, 0, 10)
+    title = f"Iter{iter_num:02d};chi2/ndf;Tracks"
+    h_chi2 = ROOT.TH1D("h_chi2", title, 100, 0, 10)
     chain.Draw("fitParam_chi2/fitParam_ndf>>h_chi2")
-    c1 = ROOT.TCanvas("c1", "Chi2 Histogram", 800, 600)
+    canvas.cd()
+    canvas.Clear()
     h_chi2.Draw()
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    c1.SaveAs(out_path)
+    canvas.SaveAs(out_path)
     print(f"Saved: {out_path}")
     
 
@@ -36,8 +38,11 @@ if __name__ == "__main__":
     
     
     # 遍历 iterXX/2kfalignment 目录
+    out_name = "chi2_hist.pdf"
+    out_path = os.path.join(draw_dir, dataset.name, out_name)
+    c1 = ROOT.TCanvas("c1", "Chi2 Histogram", 800, 600)
+    c1.SaveAs(out_path + "[")
     for it in dataset.iter_dirs():
         in_dir = os.path.join(it.dir, "2kfalignment")
-        out_name = f"iter{it.num:02d}_chi2_hist.png"
-        out_path = os.path.join(draw_dir, dataset.name, out_name)
-        # draw_chi2_hist_for_dir(in_dir, out_path)
+        draw_chi2_hist_for_dir(in_dir, out_path, it.num, c1)
+    c1.SaveAs(out_path + "]")
