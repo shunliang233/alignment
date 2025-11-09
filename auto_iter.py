@@ -9,7 +9,7 @@ from datetime import datetime, timezone, timedelta
 from RawList import RawList
 
 # source /eos/home-s/shunlian/Alignment/py_env.sh
-# nohup python3 auto_iter.py -y 2023 -r 011705 -f 450-500 -i 10 &>>auto_iter.log &
+# nohup python3 auto_iter.py -y 2023 -r 011705 -f 450-500 -i 50 &>>auto_iter.log &
 
 # 设置标准输出无缓冲
 sys.stdout.reconfigure(line_buffering=True)
