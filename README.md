@@ -18,7 +18,7 @@ The script automatically creates the environment setup script if it does not exi
 
 If the environment script already exists, it will use the existing one. You can specify a custom path with `--env_script` (default: `reco_condor_env.sh`).
 
-The environment script should contain:
+The environment script should contain *<u>(if not running Millepede on HTCondor)</u>*:
 ```bash
 #!/bin/bash
 export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase 
@@ -53,10 +53,19 @@ It is generally recommended to test after installation (takes about 10s):
 ```
 
 > :exclamation: Attention: Replace `/path/to/your/pede/` with the actual `pede` installation path.
+>
+> :exclamation: Attention: It is strongly suggested that `pede` is installed in the environment specified earlier, so as to ensure consistency in terms of `ROOT` version. Issues from `ROOT` version incompatibility has been reported.
 
 #### Configuring Environment Variables
 
-Configure in the previous section
+Apart from the standard `Athena`-`calypso` setup, adding the `pede` path is also required for the execution of alignment.
+
+```bash
+export PATH=/your/path/to/pede:$PATH
+export LD_LIBRARY_PATH=/your/path/to/pede:$LD_LIBRARY_PATH
+```
+
+> :exclamation: If running `Millepede` on HTCondor, make sure that these two lines are added to the "`env_script`".
 
 ## Event Reconstruction with `HTCondor`: `main.py`
 
@@ -101,8 +110,22 @@ python main.py -y 2023 -r 11705 -f 400-450 --calypso_path /path/to/calypso/insta
   - After completion, use `condor_transfer_data ${Cluster}` to retrieve log files
 - The reconstructed `.root` files are stored in the `../2root_file` directory
 
-### Performing Alignment
-- 
+### Performing Alignment with Millepede
+
+The process is manifestly integrated inside `millepede/bin/millepede.py` script, and is therefore greatly simplified.
+
+* Ensure that the `pede` path is added to `$PATH` and `$LD_LIBRARY_PATH`.
+
+* Execute the `millepede/bin/millepede.py` script from any directory, specifying the input file path using `-i` argument:
+    ```bash
+    python /path/to/cloned/repo/millepede/bin/millepede.py -i /path/to/alignment/workspace
+    ```
+
+    The `/path/to/alignment/workspace` should be the path to the `1reco` output path from the previous reco jobs, for example `/eos/user/c/chiw/FASER/Alignment/Alignment-Shunliang/Y2023_R011705_F400-450/iter01/1reco/`.
+
+`Millepede`  typycally takes only a few minutes for root files from 50 raw files.
+
+## :construction: Auto-Iteration Using HTCondor DAGman
 
 ### Log files
 After job execution, log files are saved in the `logs/` directory:
