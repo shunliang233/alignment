@@ -1,23 +1,19 @@
-# 构建和安装目录
+# Build and installation directories
 
-# 编译产物
+# Compilation products
 __pycache__/
 *.pyc
 
-# CMake 生成文件
+# CMake generated files
 
-# 操作系统
+# Operation system files
 .DS_Store
 Thumbs.db
 
 # Editor
 .vscode
 
-# 编译器和调试器文件
-
-# 日志和临时文件
-/main.log
-/auto_iter.log
+# Compiler and debugger files
 
 # Output
 /Y[0-9][0-9][0-9][0-9]*/
@@ -28,9 +24,9 @@ Thumbs.db
 *.stderr
 *.stdout
 
-# 包管理器目录（如果使用）
+# Package manager directories (if used)
 
-# 未完成项目
+# Incomplete projects
 /auto-copy/
 /root/
 

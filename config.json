@@ -1,26 +1,26 @@
 {
   "paths": {
-    "calypso_install": "/eos/user/c/chiw/FASER/Alignment/run/",
-    "pede_install": "/afs/cern.ch/user/c/chiw/public/faser-utils/pede/",
-    "reco_env_script": "/afs/cern.ch/user/c/chiw/condor/FASER-Alignment/reco_condor_env.sh",
-    "millepede_env_script": "/afs/cern.ch/user/c/chiw/condor/FASER-Alignment/millepede_condor_env.sh",
-    "work_dir": "/afs/cern.ch/user/c/chiw/condor/FASER-Alignment/",
-    "eos_output_dir": "/eos/user/c/chiw/FASER/Alignment/Alignment-Shunliang/"
+    "calypso_install": "/eos/home-s/shunlian/Alignment/install",
+    "pede_install": "/eos/home-s/shunlian/Environments/apps/Millepede-II/V04-17-05",
+    "reco_env_script": "/eos/home-s/shunlian/Alignment/env.sh",
+    "millepede_env_script": "/eos/home-s/shunlian/Alignment/myAlign/py_env.sh",
+    "work_dir": "/eos/home-s/shunlian/Alignment/myAlign",
+    "eos_output_dir": "/eos/home-s/shunlian/Alignment/data"
   },
   "htcondor": {
     "requirements": "(Machine =!= LastRemoteHost) && (OpSysAndVer =?= \"AlmaLinux9\")",
     "reco": {
-      "job_flavour": "workday",
-      "request_cpus": 1,
-      "request_memory": "2 GB",
-      "request_disk": "2 GB",
+      "job_flavour": "longlunch",
+      "request_cpus": 2,
+      "request_memory": "4 GB",
+      "request_disk": "8 GB",
       "max_retries": 3
     },
     "millepede": {
       "job_flavour": "espresso",
       "request_cpus": 1,
-      "request_memory": "256 MB",
-      "request_disk": "32 MB",
+      "request_memory": "2 GB",
+      "request_disk": "2 GB",
       "max_retries": 2
     }
   },

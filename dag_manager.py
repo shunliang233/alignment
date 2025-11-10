@@ -10,8 +10,8 @@ import os
 import argparse
 from pathlib import Path
 from typing import List, Optional
-from RawList import RawList
-from config import AlignmentConfig
+from .RawList import RawList
+from .config import AlignmentConfig
 
 
 class DAGManager:
@@ -331,7 +331,7 @@ def main():
                         help='Enable 3-station mode')
     parser.add_argument('--config', type=str, default='config.json',
                         help='Path to configuration file')
-    parser.add_argument('--submit', action='store_true',
+    parser.add_argument('--submit', action='store_true', default=False,
                         help='Automatically submit DAG to HTCondor')
     
     args = parser.parse_args()
@@ -357,9 +357,9 @@ def main():
     print(f"Generating DAG for Year: {year_str}, Run: {run_str}, Files: {file_list}, Iterations: {args.iterations}")
     
     # Setup paths
-    src_dir = Path(__file__).parent.absolute()
-    reco_env_path = Path(config.reco_env_script).absolute()
-    millepede_env_path = Path(config.millepede_env_script).absolute()
+    src_dir = Path(__file__).parent.resolve()
+    reco_env_path = Path(config.reco_env_script).resolve()
+    millepede_env_path = Path(config.millepede_env_script).resolve()
     
     # Determine output directory based on configuration
     # Use EOS output directory if configured and enabled, otherwise use work_dir or src_dir
