@@ -8,12 +8,13 @@ replacing the daemon-based approach with a more robust DAGman-based solution.
 
 import os
 import argparse
+import shutil
 from pathlib import Path
 from typing import List, Optional
-from .RawList import RawList
-from .config import AlignmentConfig
+from RawList import RawList
+from config import AlignmentConfig
 
-
+# TODO: extract paths from self.config, rather than from method arguments
 class DAGManager:
     """Manages HTCondor DAG generation for alignment workflow."""
     
@@ -69,6 +70,8 @@ class DAGManager:
         
         # Create individual submit file for this file in work_dir
         submit_file = work_dir / iter_str / f"reco_{iter_str}_{file_str}.sub"
+        exe_path = work_dir / iter_str / "runAlignment.sh"
+        shutil.copy(src_dir / "runAlignment.sh", exe_path)
         
         # Log files go in work_dir to avoid collisions between parallel DAGs
         log_dir = work_dir / iter_str / self.LOGS_DIR
@@ -76,7 +79,7 @@ class DAGManager:
         
         submit_content = f"""# HTCondor submit file for reconstruction job (file {file_str})
 universe = vanilla
-executable = {src_dir}/runAlignment.sh
+executable = {exe_path}
 
 output = {log_dir}/reco_{iter_str}_{file_str}.out
 error  = {log_dir}/reco_{iter_str}_{file_str}.err
@@ -364,7 +367,6 @@ def main():
     # Determine output directory based on configuration
     # Use EOS output directory if configured and enabled, otherwise use work_dir or src_dir
     main_str = f"Y{year_str}_R{run_str}_F{str(file_list)}"
-    
     if config.use_eos_storage and config.eos_output_dir:
         # Use EOS for large output files
         main_dir = Path(config.eos_output_dir) / main_str
@@ -377,21 +379,17 @@ def main():
         # Fallback to script directory
         main_dir = src_dir / main_str
         print(f"Using script directory: {main_dir}")
-
-    dag_dir = os.path.join(
-        config.work_dir,
-        "dag_files",
-        main_str,
-    ) if config.work_dir else main_dir
-    
+    dag_dir = (
+        Path(config.work_dir) / "dag_files" / main_str
+        ) if config.work_dir else main_dir
     main_dir.mkdir(parents=True, exist_ok=True)
-    Path(dag_dir).mkdir(parents=True, exist_ok=True)
+    dag_dir.mkdir(parents=True, exist_ok=True)
     
     # Create DAG
     dag_manager = DAGManager(config)
     dag_file = dag_manager.create_dag_file(
         main_dir, year_str, run_str, file_list, args.iterations,
-        args.fourst, args.threest, src_dir, reco_env_path, millepede_env_path, Path(dag_dir)
+        args.fourst, args.threest, src_dir, reco_env_path, millepede_env_path, dag_dir
     )
     
     print(f"\nDAG file created successfully: {dag_file}")
@@ -401,15 +399,24 @@ def main():
     if args.submit:
         import subprocess
         print("\nSubmitting DAG to HTCondor...")
-        result = subprocess.run(
-            ["condor_submit_dag", str(dag_file)],
-            capture_output=True,
-            text=True
-        )
-        print(result.stdout)
-        if result.returncode != 0:
-            print(f"Error submitting DAG: {result.stderr}")
-            return 1
+        
+        # Change to dag directory before submitting
+        original_dir = Path.cwd()
+        os.chdir(dag_dir)
+        
+        try:
+            result = subprocess.run(
+                ["condor_submit_dag", str(dag_file)],
+                capture_output=True,
+                text=True
+            )
+            print(result.stdout)
+            if result.returncode != 0:
+                print(f"Error submitting DAG: {result.stderr}")
+                return 1
+        finally:
+            # Restore original directory
+            os.chdir(original_dir)
     
     return 0
 

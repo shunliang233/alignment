@@ -22,7 +22,7 @@ DEFAULT_MILLEPEDE_MEMORY = "2 GB"
 DEFAULT_MILLEPEDE_DISK = "2 GB"
 DEFAULT_MILLEPEDE_CPUS = 1
 
-
+# TODO: Add raw list in config
 class AlignmentConfig:
     """Manages configuration for FASER alignment scripts."""
     
@@ -50,8 +50,7 @@ class AlignmentConfig:
         
         try:
             with open(config_path, 'r') as f:
-                config = json.load(f)
-            return config
+                return json.load(f)
         except json.JSONDecodeError as e:
             raise ValueError(f"Invalid JSON in configuration file: {e}")
     

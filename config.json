@@ -4,7 +4,7 @@
     "pede_install": "/eos/home-s/shunlian/Environments/apps/Millepede-II/V04-17-05",
     "reco_env_script": "/eos/home-s/shunlian/Alignment/env.sh",
     "millepede_env_script": "/eos/home-s/shunlian/Alignment/myAlign/py_env.sh",
-    "work_dir": "/eos/home-s/shunlian/Alignment/myAlign",
+    "work_dir": "/afs/cern.ch/user/s/shunlian/alignment",
     "eos_output_dir": "/eos/home-s/shunlian/Alignment/data"
   },
   "htcondor": {
