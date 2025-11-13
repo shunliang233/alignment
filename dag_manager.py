@@ -14,7 +14,11 @@ from typing import List, Optional
 from RawList import RawList
 from config import AlignmentConfig
 
+# Test: python3 dag_manager.py -y 2023 -r 011705 -f 400-420 -i 5 --submit
+
 # TODO: extract paths from self.config, rather than from method arguments
+# TODO: 运行前检查 config.json 中的路径是否存在，以及各种语法合理性
+# TODO: 支持断点执行
 class DAGManager:
     """Manages HTCondor DAG generation for alignment workflow."""
     
@@ -71,6 +75,7 @@ class DAGManager:
         # Create individual submit file for this file in work_dir
         submit_file = work_dir / iter_str / f"reco_{iter_str}_{file_str}.sub"
         exe_path = work_dir / iter_str / "runAlignment.sh"
+        exe_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(src_dir / "runAlignment.sh", exe_path)
         
         # Log files go in work_dir to avoid collisions between parallel DAGs
@@ -407,6 +412,7 @@ def main():
         try:
             result = subprocess.run(
                 ["condor_submit_dag", str(dag_file)],
+                cwd=dag_dir,
                 capture_output=True,
                 text=True
             )

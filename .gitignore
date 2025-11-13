@@ -15,7 +15,11 @@ Thumbs.db
 
 # Compiler and debugger files
 
+# Submit files
+/dag_files/
+
 # Output
+/data
 /Y[0-9][0-9][0-9][0-9]*/
 /Draw/
 *.log
