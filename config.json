@@ -11,12 +11,16 @@
     "file": "alignment.dag",
     "iter": {
       "dir": "iter{iter}"
+
     }
   },
   "data": {
     "dir": "/eos/home-s/shunlian/Alignment/data/{format}",
     "iter": {
-      "dir": "iter{iter}"
+      "dir": "iter{iter}",
+      "reco": "1reco",
+      "kfalign": "2kfalignment",
+      "millepede": "3millepede"
     }
   },
 

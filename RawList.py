@@ -1,5 +1,6 @@
 from typing import List, Iterator
 
+# TODO: Upgrade RawList to accept year, run, files and then pick raw files from os.
 class RawList:
     """
     处理原始文件编号字符串的类，支持单个文件和范围格式

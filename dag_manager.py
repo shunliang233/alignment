@@ -121,15 +121,24 @@ class DAGManager:
     def _reco_dir(self, iteration: int) -> Path:
         """Get reconstruction directory path for an iteration."""
         iter_dir = self._data_iter_dir(iteration)
-        return iter_dir / "1reco"
+        reco = self.config.data.iter.reco
+        if isinstance(reco, str):
+            return iter_dir / reco
+        raise TypeError(f"data.iter.reco type: {type(reco).__name__} not valid.")
     def _kfalign_dir(self, iteration: int) -> Path:
         """Get KF alignment directory path for an iteration."""
         iter_dir = self._data_iter_dir(iteration)
-        return iter_dir / "2kfalignment"
+        kfalign = self.config.data.iter.kfalign
+        if isinstance(kfalign, str):
+            return iter_dir / kfalign
+        raise TypeError(f"data.iter.kfalign type: {type(kfalign).__name__} not valid.")
     def _millepede_dir(self, iteration: int) -> Path:
         """Get Millepede directory path for an iteration."""
         iter_dir = self._data_iter_dir(iteration)
-        return iter_dir / "3millepede"
+        millepede = self.config.data.iter.millepede
+        if isinstance(millepede, str):
+            return iter_dir / millepede
+        raise TypeError(f"data.iter.millepede type: {type(millepede).__name__} not valid.")
     
 
     def create_data_dirs(self) -> None:
@@ -165,7 +174,84 @@ class DAGManager:
                 print(f"Millepede directory already exists: {millepede_dir}")
             else:
                 millepede_dir.mkdir(parents=True)
+
+
+    def create_reco_submit_file(
+        self, 
+        output_dir: Path,
+        iteration: int,
+        year: str,
+        run: str,
+        file_str: str,
+        fourst: bool,
+        threest: bool,
+        src_dir: Path,
+        env_path: Path,
+        work_dir: Path
+    ) -> Path:
+        """
+        Create HTCondor submit file for a single reconstruction job.
         
+        Args:
+            output_dir: Main output directory for job data
+            iteration: Iteration number
+            year: Year of data taking
+            run: Run number (6 digits)
+            file_str: File number as string (e.g., "00400")
+            fourst: Enable 4-station mode
+            threest: Enable 3-station mode
+            src_dir: Source directory path
+            env_path: Environment script path
+            work_dir: Work directory for DAG and log files
+            
+        Returns:
+            Path to created submit file
+        """
+        iter_str = f"iter{iteration:02d}"
+        reco_dir = self._reco_dir(iteration)
+        kfalign_dir = self._kfalign_dir(iteration)
+        
+        # Create individual submit file for this file in work_dir
+        submit_file = work_dir / iter_str / f"reco_{iter_str}_{file_str}.sub"
+        exe_path = work_dir / iter_str / "runAlignment.sh"
+        exe_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(src_dir / "runAlignment.sh", exe_path)
+        
+        # Log files go in work_dir to avoid collisions between parallel DAGs
+        log_dir = work_dir / iter_str / self.LOGS_DIR
+        log_dir.mkdir(parents=True, exist_ok=True)
+        
+        submit_content = f"""# HTCondor submit file for reconstruction job (file {file_str})
+universe = vanilla
+executable = {exe_path}
+
+output = {log_dir}/reco_{iter_str}_{file_str}.out
+error  = {log_dir}/reco_{iter_str}_{file_str}.err
+log    = {log_dir}/reco_{iter_str}_{file_str}.log
+
+request_cpus = {self.config.get('htcondor.reco.request_cpus', 1)}
+request_memory = {self.config.get('htcondor.reco.request_memory', '2 GB')}
+request_disk = {self.config.get('htcondor.reco.request_disk', '2 GB')}
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+transfer_output_files = logs/
+
++JobFlavour = "{self.config.get('htcondor.reco.job_flavour', 'workday')}"
+on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)
+max_retries = {self.config.get('htcondor.reco.max_retries', 3)}
+requirements = {self.config.get('htcondor.requirements', self.DEFAULT_REQUIREMENTS)}
+
+arguments = {year} {run} {file_str} {fourst} {threest} {reco_dir} {kfalign_dir} {src_dir} {env_path}
+queue
+"""
+        
+        # Write submit file
+        submit_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(submit_file, 'w') as f:
+            f.write(submit_content)
+        
+        return submit_file
+
 
 
     def _create_setup_job_script(self, output_dir: Path, iteration: int) -> None:
@@ -289,81 +375,6 @@ class DAGManager:
         return dag_file
 
 
-    def create_reco_submit_file(
-        self, 
-        output_dir: Path,
-        iteration: int,
-        year: str,
-        run: str,
-        file_str: str,
-        fourst: bool,
-        threest: bool,
-        src_dir: Path,
-        env_path: Path,
-        work_dir: Path
-    ) -> Path:
-        """
-        Create HTCondor submit file for a single reconstruction job.
-        
-        Args:
-            output_dir: Main output directory for job data
-            iteration: Iteration number
-            year: Year of data taking
-            run: Run number (6 digits)
-            file_str: File number as string (e.g., "00400")
-            fourst: Enable 4-station mode
-            threest: Enable 3-station mode
-            src_dir: Source directory path
-            env_path: Environment script path
-            work_dir: Work directory for DAG and log files
-            
-        Returns:
-            Path to created submit file
-        """
-        iter_str = f"iter{iteration:02d}"
-        reco_dir = output_dir / iter_str / "1reco"
-        kfalign_dir = output_dir / iter_str / "2kfalignment"
-        
-        # Create individual submit file for this file in work_dir
-        submit_file = work_dir / iter_str / f"reco_{iter_str}_{file_str}.sub"
-        exe_path = work_dir / iter_str / "runAlignment.sh"
-        exe_path.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy(src_dir / "runAlignment.sh", exe_path)
-        
-        # Log files go in work_dir to avoid collisions between parallel DAGs
-        log_dir = work_dir / iter_str / self.LOGS_DIR
-        log_dir.mkdir(parents=True, exist_ok=True)
-        
-        submit_content = f"""# HTCondor submit file for reconstruction job (file {file_str})
-universe = vanilla
-executable = {exe_path}
-
-output = {log_dir}/reco_{iter_str}_{file_str}.out
-error  = {log_dir}/reco_{iter_str}_{file_str}.err
-log    = {log_dir}/reco_{iter_str}_{file_str}.log
-
-request_cpus = {self.config.get('htcondor.reco.request_cpus', 1)}
-request_memory = {self.config.get('htcondor.reco.request_memory', '2 GB')}
-request_disk = {self.config.get('htcondor.reco.request_disk', '2 GB')}
-should_transfer_files = YES
-when_to_transfer_output = ON_EXIT
-transfer_output_files = logs/
-
-+JobFlavour = "{self.config.get('htcondor.reco.job_flavour', 'workday')}"
-on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)
-max_retries = {self.config.get('htcondor.reco.max_retries', 3)}
-requirements = {self.config.get('htcondor.requirements', self.DEFAULT_REQUIREMENTS)}
-
-arguments = {year} {run} {file_str} {fourst} {threest} {reco_dir} {kfalign_dir} {src_dir} {env_path}
-queue
-"""
-        
-        # Write submit file
-        submit_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(submit_file, 'w') as f:
-            f.write(submit_content)
-        
-        return submit_file
 
     def create_millepede_submit_file(
         self,
