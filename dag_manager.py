@@ -14,7 +14,7 @@ from typing import List, Optional
 from RawList import RawList
 from config import AlignmentConfig
 
-# Test: python3 dag_manager.py -y 2023 -r 011705 -f 400-420 -i 5 --submit
+# Test: python3 dag_manager.py -y 2025 -r 020633 -f 101-142 -i 10 --submit
 
 # TODO: extract paths from self.config, rather than from method arguments
 # TODO: 运行前检查 config.json 中的路径是否存在，以及各种语法合理性
@@ -97,7 +97,7 @@ should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 transfer_output_files = logs/
 
-+JobFlavour = "{self.config.get('htcondor.reco.job_flavour', 'longlunch')}"
++JobFlavour = "{self.config.get('htcondor.reco.job_flavour', 'workday')}"
 on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)
 max_retries = {self.config.get('htcondor.reco.max_retries', 3)}
 requirements = {self.config.get('htcondor.requirements', self.DEFAULT_REQUIREMENTS)}
@@ -190,7 +190,7 @@ request_disk = {self.config.get('htcondor.millepede.request_disk', '2 GB')}
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 
-+JobFlavour = "{self.config.get('htcondor.millepede.job_flavour', 'espresso')}"
++JobFlavour = "{self.config.get('htcondor.millepede.job_flavour', 'workday')}"
 on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)
 max_retries = {self.config.get('htcondor.millepede.max_retries', 2)}
 
@@ -316,7 +316,8 @@ queue
         # For subsequent iterations, create empty placeholder
         # (actual alignment constants will be copied by pre-script during job execution)
         input_path = reco_dir / "inputforalign.txt"
-        input_path.touch()
+        template_path = Path(__file__).parent / "templates" / "inputforalign.txt"
+        shutil.copy(template_path, input_path)
 
 
 def main():
