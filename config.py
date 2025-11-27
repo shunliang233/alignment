@@ -9,7 +9,7 @@ providing centralized path management for Calypso, Pede, and other dependencies.
 import json
 import os
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Optional
 
 
 # Default resource request values for reconstruction jobs
@@ -21,6 +21,22 @@ DEFAULT_RECO_CPUS = 2
 DEFAULT_MILLEPEDE_MEMORY = "2 GB"
 DEFAULT_MILLEPEDE_DISK = "2 GB"
 DEFAULT_MILLEPEDE_CPUS = 1
+
+class ConfigNode:
+    """A dict node in the configuration tree."""
+    def __init__(self, data: dict[str, Any]):
+        if not isinstance(data, dict):
+            raise TypeError(f"ConfigNode expects a dict, got {type(data).__name__}")
+        self._data = data
+
+    def __getattr__(self, key: str):
+        if key in self._data:
+            value = self._data[key]
+            if isinstance(value, dict):
+                return ConfigNode(value)
+            else:
+                return value
+        raise AttributeError(f"No such config key: {key}")
 
 # TODO: Add raw list in config
 class AlignmentConfig:
@@ -36,9 +52,9 @@ class AlignmentConfig:
             config_file: Path to JSON configuration file. If None, uses default.
         """
         self.config_file = config_file or self.DEFAULT_CONFIG_FILE
-        self.config: Dict[str, Any] = self._load_config()
+        self.config: dict[str, Any] = self._load_config()
         
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> dict[str, Any]:
         """Load configuration from JSON file."""
         config_path = Path(self.config_file)
         
@@ -53,6 +69,16 @@ class AlignmentConfig:
                 return json.load(f)
         except json.JSONDecodeError as e:
             raise ValueError(f"Invalid JSON in configuration file: {e}")
+    
+    def __getattr__(self, key: str):
+        """Allow attribute-style access to config keys"""
+        if key in self.config:
+            value = self.config[key]
+            if isinstance(value, dict):
+                return ConfigNode(value)
+            else:
+                return value
+        raise AttributeError(f"No such config key: {key}")
     
     def get(self, key: str, default: Any = None) -> Any:
         """
@@ -100,6 +126,15 @@ class AlignmentConfig:
             json.dump(self.config, f, indent=2)
     
     # Convenience properties for commonly used paths
+    @property
+    def dir_paths(self) -> dict[str, Path]:
+        """
+        Get all dir_paths with values as Path objects.
+        """
+        d = self.get("dir_paths")
+        return {k: Path(v) for k, v in d.items()}
+    
+    
     
     @property
     def calypso_path(self) -> str:

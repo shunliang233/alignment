@@ -13,10 +13,11 @@ from pathlib import Path
 from typing import List, Optional
 from RawList import RawList
 from config import AlignmentConfig
+import ColorfulPrint
 
 # Test: python3 dag_manager.py -y 2025 -r 020633 -f 101-142 -i 10 --submit
 
-# TODO: extract paths from self.config, rather than from method arguments
+# TODO: extract paths from self.config, rather than from arguments
 # TODO: 运行前检查 config.json 中的路径是否存在，以及各种语法合理性
 # TODO: 支持断点执行
 class DAGManager:
@@ -37,6 +38,257 @@ class DAGManager:
         """
         self.config = config
     
+    """Format config values"""
+    # Raw info
+    @property
+    def _year(self) -> str:
+        """Get year string from configuration."""
+        year = self.config.raw.year
+        if isinstance(year, (str, int)):
+            return str(year).zfill(4)
+        raise TypeError(f"raw.year type: {type(year).__name__} not valid.")
+    @property
+    def _run(self) -> str:
+        """Get run string from configuration."""
+        run = self.config.raw.run
+        if isinstance(run, (str, int)):
+            return str(run).zfill(6)
+        raise TypeError(f"raw.run type: {type(run).__name__} not valid.")
+    @property
+    def _files(self) -> RawList:
+        """Get files string from configuration."""
+        files = self.config.raw.files
+        if isinstance(files, str):
+            return RawList(files)
+        raise TypeError(f"raw.files type: {type(files).__name__} not valid.")
+    @property
+    def _iters_str(self) -> str:
+        """Get iters string from configuration."""
+        iters = self.config.raw.iters
+        if isinstance(iters, (str, int)):
+            return str(iters).zfill(2)
+        raise TypeError(f"raw.iters type: {type(iters).__name__} not valid.")
+    @property
+    def _iters_int(self) -> int:
+        """Get iters integer from configuration."""
+        iters = self.config.raw.iters
+        if isinstance(iters, (str, int)):
+            return int(iters)
+        raise TypeError(f"raw.iters type: {type(iters).__name__} not valid.")
+    @property
+    def _format(self) -> str:
+        """Get format string from configuration."""
+        fmt = self.config.raw.format
+        if isinstance(fmt, str):
+            year = self._year
+            run = self._run
+            files = self._files
+            return fmt.format(year=year, run=run, files=files)
+        raise TypeError(f"raw.format type: {type(fmt).__name__} not valid.")
+    # Dag info
+    @property
+    def _dag_dir(self) -> Path:
+        """Get directory for DAG files."""
+        dag_dir = self.config.dag.dir
+        if isinstance(dag_dir, str):
+            dag_dir_fmt = dag_dir.format(format=self._format)
+            return Path(dag_dir_fmt)
+        raise TypeError(f"dag.dir type: {type(dag_dir).__name__} not valid.")
+    @property
+    def _dag_file(self) -> Path:
+        """Get path for DAG file."""
+        dag_file = self.config.dag.file
+        if isinstance(dag_file, str):
+            return self._dag_dir / dag_file
+        raise TypeError(f"dag.file type: {type(dag_file).__name__} not valid.")
+    # Data info
+    @property
+    def _data_dir(self) -> Path:
+        """Get data directory path."""
+        data_dir = self.config.data.dir
+        if isinstance(data_dir, str):
+            data_dir_fmt = data_dir.format(format=self._format)
+            return Path(data_dir_fmt)
+        raise TypeError(f"data.dir type: {type(data_dir).__name__} not valid.")
+    def _data_iter_dir(self, iteration: int) -> Path:
+        """Get iteration directory path."""
+        iter_str = f"{iteration:02d}"
+        iter_dir = self.config.data.iter.dir
+        if isinstance(iter_dir, str):
+            iter_dir_fmt = iter_dir.format(iter=iter_str)
+            return self._data_dir / iter_dir_fmt
+        raise TypeError(f"data.iter.dir type: {type(iter_dir).__name__} not valid.")
+    def _reco_dir(self, iteration: int) -> Path:
+        """Get reconstruction directory path for an iteration."""
+        iter_dir = self._data_iter_dir(iteration)
+        return iter_dir / "1reco"
+    def _kfalign_dir(self, iteration: int) -> Path:
+        """Get KF alignment directory path for an iteration."""
+        iter_dir = self._data_iter_dir(iteration)
+        return iter_dir / "2kfalignment"
+    def _millepede_dir(self, iteration: int) -> Path:
+        """Get Millepede directory path for an iteration."""
+        iter_dir = self._data_iter_dir(iteration)
+        return iter_dir / "3millepede"
+    
+
+    def create_data_dirs(self) -> None:
+        """Create data directories for all iterations."""
+        data_dir = self._data_dir
+        if data_dir.exists():
+            ColorfulPrint.print_yellow(f"Warning: ")
+            print(f"Data directory already exists: {data_dir}")
+        else:
+            data_dir.mkdir(parents=True)
+        for it in range(self._iters_int):
+            iter_dir = self._data_iter_dir(it)
+            if iter_dir.exists():
+                ColorfulPrint.print_yellow(f"Warning: ")
+                print(f"Iteration directory already exists: {iter_dir}")
+            else:
+                iter_dir.mkdir(parents=True)
+            reco_dir = self._reco_dir(it)
+            if reco_dir.exists():
+                ColorfulPrint.print_yellow(f"Warning: ")
+                print(f"Reconstruction directory already exists: {reco_dir}")
+            else:
+                reco_dir.mkdir(parents=True)
+            kfalign_dir = self._kfalign_dir(it)
+            if kfalign_dir.exists():
+                ColorfulPrint.print_yellow(f"Warning: ")
+                print(f"KF alignment directory already exists: {kfalign_dir}")
+            else:
+                kfalign_dir.mkdir(parents=True)
+            millepede_dir = self._millepede_dir(it)
+            if millepede_dir.exists():
+                ColorfulPrint.print_yellow(f"Warning: ")
+                print(f"Millepede directory already exists: {millepede_dir}")
+            else:
+                millepede_dir.mkdir(parents=True)
+        
+
+
+    def _create_setup_job_script(self, output_dir: Path, iteration: int) -> None:
+        """
+        Create setup script for an iteration (prepare directories and input files).
+        
+        Args:
+            output_dir: Main output directory
+            iteration: Iteration number
+        """
+        iter_str = f"iter{iteration:02d}"
+        iter_dir = output_dir / iter_str
+        reco_dir = iter_dir / "1reco"
+        kfalign_dir = iter_dir / "2kfalignment"
+        millepede_dir = iter_dir / "3millepede"
+        
+        # Create directories
+        reco_dir.mkdir(parents=True, exist_ok=True)
+        kfalign_dir.mkdir(parents=True, exist_ok=True)
+        millepede_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Prepare inputforalign.txt
+        # For iteration 1, create empty file
+        # For subsequent iterations, create empty placeholder
+        # (actual alignment constants will be copied by pre-script during job execution)
+        input_path = reco_dir / "inputforalign.txt"
+        template_path = Path(__file__).parent / "templates" / "inputforalign.txt"
+        shutil.copy(template_path, input_path)
+
+
+
+
+    def create_dag_file(
+        self,
+        output_dir: Path,
+        year: str,
+        run: str,
+        file_list: RawList,
+        iterations: int,
+        fourst: bool,
+        threest: bool,
+        src_dir: Path,
+        reco_env_path: Path,
+        millepede_env_path: Path,
+        work_dir: Path
+    ) -> Path:
+        """
+        Create HTCondor DAG file for complete alignment workflow.
+        
+        Args:
+            output_dir: Main output directory for job data
+            year: Year of data taking
+            run: Run number (6 digits)
+            file_list: RawList object with file numbers
+            iterations: Number of iterations to perform
+            fourst: Enable 4-station mode
+            threest: Enable 3-station mode
+            src_dir: Source directory path
+            reco_env_path: Reconstruction environment script path
+            millepede_env_path: Millepede environment script path
+            work_dir: Work directory for DAG and log files
+            
+        Returns:
+            Path to created DAG file
+        """
+        dag_file = self._dag_file
+        
+        dag_content = "# HTCondor DAG for FASER alignment workflow\n\n"
+        
+        # Create jobs for each iteration
+        for it in range(1, iterations + 1):
+            # Setup job script for each iteration
+            self._create_setup_job_script(output_dir, it)
+            
+            # Create individual reconstruction jobs for each file
+            dag_content += f"# Iteration {it} reconstruction jobs\n"
+            reco_jobs = []
+            for file_str in file_list:
+                job_name = f"reco_{it:02d}_{file_str}"
+                reco_jobs.append(job_name)
+                reco_submit = self.create_reco_submit_file(
+                    output_dir, it, year, run, file_str, fourst, threest, src_dir, reco_env_path, work_dir
+                )
+                dag_content += f"JOB {job_name} {reco_submit}\n"
+            
+            # Millepede job
+            dag_content += f"\n# Iteration {it} millepede job\n"
+            mille_submit = self.create_millepede_submit_file(
+                output_dir, it, src_dir, millepede_env_path, work_dir,
+                to_next_iter=(it < iterations)
+            )
+            dag_content += f"JOB millepede_{it:02d} {mille_submit}\n"
+            
+            # Add dependencies
+            dag_content += f"\n# Iteration {it} dependencies\n"
+            # All reconstruction jobs must complete before millepede
+            for reco_job in reco_jobs:
+                dag_content += f"PARENT {reco_job} CHILD millepede_{it:02d}\n"
+            
+            # Link iterations - millepede from previous iteration must complete
+            # before any reconstruction job in the current iteration starts
+            if it > 1:
+                for reco_job in reco_jobs:
+                    dag_content += f"PARENT millepede_{it-1:02d} CHILD {reco_job}\n"
+            
+            dag_content += "\n"
+        
+        # Add retry settings
+        dag_content += "# Retry settings\n"
+        for it in range(1, iterations + 1):
+            for file_str in file_list:
+                job_name = f"reco_{it:02d}_{file_str}"
+                dag_content += f"RETRY {job_name} 2\n"
+            dag_content += f"RETRY millepede_{it:02d} 1\n"
+        
+        # Write DAG file
+        with open(dag_file, 'w') as f:
+            f.write(dag_content)
+        
+        print(f"Created DAG file: {dag_file}")
+        return dag_file
+
+
     def create_reco_submit_file(
         self, 
         output_dir: Path,
@@ -202,122 +454,7 @@ queue
         
         return submit_file
     
-    def create_dag_file(
-        self,
-        output_dir: Path,
-        year: str,
-        run: str,
-        file_list: RawList,
-        iterations: int,
-        fourst: bool,
-        threest: bool,
-        src_dir: Path,
-        reco_env_path: Path,
-        millepede_env_path: Path,
-        work_dir: Path
-    ) -> Path:
-        """
-        Create HTCondor DAG file for complete alignment workflow.
-        
-        Args:
-            output_dir: Main output directory for job data
-            year: Year of data taking
-            run: Run number (6 digits)
-            file_list: RawList object with file numbers
-            iterations: Number of iterations to perform
-            fourst: Enable 4-station mode
-            threest: Enable 3-station mode
-            src_dir: Source directory path
-            reco_env_path: Reconstruction environment script path
-            millepede_env_path: Millepede environment script path
-            work_dir: Work directory for DAG and log files
-            
-        Returns:
-            Path to created DAG file
-        """
-        dag_file = work_dir / "alignment.dag"
 
-        dag_content = "# HTCondor DAG for FASER alignment workflow\n\n"
-        
-        # Create jobs for each iteration
-        for it in range(1, iterations + 1):
-            # Setup job script for each iteration
-            self._create_setup_job_script(output_dir, it)
-            
-            # Create individual reconstruction jobs for each file
-            dag_content += f"# Iteration {it} reconstruction jobs\n"
-            reco_jobs = []
-            for file_str in file_list:
-                job_name = f"reco_{it:02d}_{file_str}"
-                reco_jobs.append(job_name)
-                reco_submit = self.create_reco_submit_file(
-                    output_dir, it, year, run, file_str, fourst, threest, src_dir, reco_env_path, work_dir
-                )
-                dag_content += f"JOB {job_name} {reco_submit}\n"
-            
-            # Millepede job
-            dag_content += f"\n# Iteration {it} millepede job\n"
-            mille_submit = self.create_millepede_submit_file(
-                output_dir, it, src_dir, millepede_env_path, work_dir,
-                to_next_iter=(it < iterations)
-            )
-            dag_content += f"JOB millepede_{it:02d} {mille_submit}\n"
-            
-            # Add dependencies
-            dag_content += f"\n# Iteration {it} dependencies\n"
-            # All reconstruction jobs must complete before millepede
-            for reco_job in reco_jobs:
-                dag_content += f"PARENT {reco_job} CHILD millepede_{it:02d}\n"
-            
-            # Link iterations - millepede from previous iteration must complete
-            # before any reconstruction job in the current iteration starts
-            if it > 1:
-                for reco_job in reco_jobs:
-                    dag_content += f"PARENT millepede_{it-1:02d} CHILD {reco_job}\n"
-            
-            dag_content += "\n"
-        
-        # Add retry settings
-        dag_content += "# Retry settings\n"
-        for it in range(1, iterations + 1):
-            for file_str in file_list:
-                job_name = f"reco_{it:02d}_{file_str}"
-                dag_content += f"RETRY {job_name} 2\n"
-            dag_content += f"RETRY millepede_{it:02d} 1\n"
-        
-        # Write DAG file
-        with open(dag_file, 'w') as f:
-            f.write(dag_content)
-        
-        print(f"Created DAG file: {dag_file}")
-        return dag_file
-
-    def _create_setup_job_script(self, output_dir: Path, iteration: int) -> None:
-        """
-        Create setup script for an iteration (prepare directories and input files).
-        
-        Args:
-            output_dir: Main output directory
-            iteration: Iteration number
-        """
-        iter_str = f"iter{iteration:02d}"
-        iter_dir = output_dir / iter_str
-        reco_dir = iter_dir / "1reco"
-        kfalign_dir = iter_dir / "2kfalignment"
-        millepede_dir = iter_dir / "3millepede"
-        
-        # Create directories
-        reco_dir.mkdir(parents=True, exist_ok=True)
-        kfalign_dir.mkdir(parents=True, exist_ok=True)
-        millepede_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Prepare inputforalign.txt
-        # For iteration 1, create empty file
-        # For subsequent iterations, create empty placeholder
-        # (actual alignment constants will be copied by pre-script during job execution)
-        input_path = reco_dir / "inputforalign.txt"
-        template_path = Path(__file__).parent / "templates" / "inputforalign.txt"
-        shutil.copy(template_path, input_path)
 
 
 def main():

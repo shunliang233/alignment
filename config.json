@@ -1,4 +1,27 @@
 {
+  "raw": {
+    "year": 2024,
+    "run": 20633,
+    "files": "101-151",
+    "iters": 10,
+    "format": "Y{year}_R{run}_F{files}"
+  },
+  "dag": {
+    "dir": "/afs/cern.ch/user/s/shunlian/alignment/dag_dir/{format}",
+    "file": "alignment.dag",
+    "iter": {
+      "dir": "iter{iter}"
+    }
+  },
+  "data": {
+    "dir": "/eos/home-s/shunlian/Alignment/data/{format}",
+    "iter": {
+      "dir": "iter{iter}"
+    }
+  },
+
+
+
   "paths": {
     "calypso_install": "/eos/home-s/shunlian/Alignment/install",
     "pede_install": "/eos/home-s/shunlian/Environments/apps/Millepede-II/V04-17-05",
