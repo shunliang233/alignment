@@ -1,0 +1,22 @@
+# HTCondor submit file for reconstruction job (file {file_str})
+universe = vanilla
+executable = {exe_path}
+
+output = {out_path}
+error  = {err_path}
+log    = {log_path}
+
+request_cpus = 2
+request_memory = 4 GB
+request_disk = 8 GB
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+transfer_output_files = logs/
+
++JobFlavour = "workday"
+on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)
+max_retries = 3
+requirements = (Machine =!= LastRemoteHost) && (OpSysAndVer =?= "AlmaLinux9")
+
+arguments = {year} {run} {file_str} {fourst} {threest} {reco_dir} {kfalign_dir} {src_dir} {env_path}
+queue
