@@ -1,9 +1,9 @@
 {
   "raw": {
-    "year": 2025,
-    "run": 20007,
-    "files": "201-250",
-    "iters": 10,
+    "year": 2023,
+    "run": 11705,
+    "files": "401-431",
+    "iters": 3,
     "format": "Y{year}_R{run}_F{files}",
     "fourst": false,
     "threest": true
@@ -12,9 +12,7 @@
     "dir": "/afs/cern.ch/user/s/shunlian/alignment/dag_files/{format}",
     "file": "alignment.dag",
     "recoexe": "runAlignment.sh",
-    "recoenv": "reco_env.sh",
     "milleexe": "runMillepede.sh",
-    "milleenv": "mille_env.sh",
     "iter": {
       "dir": "iter{iter}",
       "recojob": "reco_iter{iter}_{file}",
@@ -45,55 +43,19 @@
     "dir": "/afs/cern.ch/user/s/shunlian/alignment/templates",
     "recosub": "reco.sub.tpl",
     "recoexe": "runAlignment.sh",
-    "recoenv": "reco_env.sh",
     "millesub": "mille.sub.tpl",
     "milleexe": "runMillepede.sh",
-    "milleenv": "mille_env.sh",
     "inputforalign": "inputforalign.txt"
   },
   "src": {
     "dir": "/afs/cern.ch/user/s/shunlian/alignment"
   },
-
-
-
-
-
-  "discarded": {
-    "paths": {
-      "calypso_install": "/eos/home-s/shunlian/Alignment/install",
-      "pede_install": "/eos/home-s/shunlian/Environments/apps/Millepede-II/V04-17-05",
-      "reco_env_script": "/eos/home-s/shunlian/Alignment/env.sh",
-      "millepede_env_script": "/afs/cern.ch/user/s/shunlian/alignment/py_env.sh",
-      "work_dir": "/afs/cern.ch/user/s/shunlian/alignment",
-      "eos_output_dir": "/eos/home-s/shunlian/Alignment/data"
+  "env": {
+    "calypso": {
+      "asetup": "/eos/home-s/shunlian/Alignment/calypso/asetup.faser",
+      "setup": "/eos/home-s/shunlian/Alignment/install/setup.sh"
     },
-    "htcondor": {
-      "requirements": "(Machine =!= LastRemoteHost) && (OpSysAndVer =?= \"AlmaLinux9\")",
-      "reco": {
-        "job_flavour": "workday",
-        "request_cpus": 2,
-        "request_memory": "4 GB",
-        "request_disk": "8 GB",
-        "max_retries": 3
-      },
-      "millepede": {
-        "job_flavour": "workday",
-        "request_cpus": 1,
-        "request_memory": "2 GB",
-        "request_disk": "2 GB",
-        "max_retries": 2
-      }
-    },
-    "alignment": {
-      "default_iterations": 10,
-      "polling_interval_seconds": 300
-    },
-    "storage": {
-      "use_eos_for_output": true,
-      "keep_intermediate_root_files": true,
-      "keep_alignment_constants": true,
-      "cleanup_reco_temp_files": true
-    }
+    "pede": "/eos/home-s/shunlian/Environments/apps/Millepede-II/V04-17-05",
+    "root": "/cvmfs/sft.cern.ch/lcg/app/releases/ROOT/6.36.04/x86_64-almalinux9.6-gcc115-opt/bin/thisroot.sh"
   }
 }

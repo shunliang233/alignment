@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: ./runAlignment.sh <YEAR> <RUN> <FILE> <FOURST> <THREEST> <RECO_DIR> <KFALIGN_DIR> <SRC_DIR> <ENV_PATH>
+# Usage: ./runAlignment.sh <YEAR> <RUN> <FILE> <FOURST> <THREEST> <RECO_DIR> <KFALIGN_DIR> <SRC_DIR> <CALYPSO_ASETUP> <CALYPSO_SETUP>
 YEAR=$1
 RUN=$2
 FILE=$3
@@ -9,7 +9,8 @@ THREEST=$5
 RECO_DIR=$6
 KFALIGN_DIR=$7
 SRC_DIR=$8
-ENV_PATH=$9
+CALYPSO_ASETUP=$9
+CALYPSO_SETUP=${10}
 echo "Running with parameters:"
 echo " Year: $YEAR"
 echo " Run: $RUN"
@@ -19,7 +20,8 @@ echo " THREEST: $THREEST"
 echo " RecoDir: $RECO_DIR"
 echo " KFAlignDir: $KFALIGN_DIR"
 echo " SrcDir: $SRC_DIR"
-echo " EnvPath: $ENV_PATH"
+echo " CalypsoAsetup: $CALYPSO_ASETUP"
+echo " CalypsoSetup: $CALYPSO_SETUP"
 echo ""
 
 # Dir for condor to store logs
@@ -27,8 +29,11 @@ mkdir -p logs
 echo "=== Create logs directory on execute node ==="
 
 # Setup environment
-source $ENV_PATH
-echo "=== Sourced environment from $ENV_PATH ==="
+export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase 
+source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh
+asetup --input=$CALYPSO_ASETUP Athena,24.0.41
+source $CALYPSO_SETUP
+echo "=== Sourced environment from ==="
 
 # Create working directory on HTCondor execute node (local disk, not AFS)
 # Use $_CONDOR_SCRATCH_DIR if available, otherwise use /tmp

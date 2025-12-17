@@ -6,7 +6,6 @@ This module generates and manages HTCondor DAG files for iterative alignment,
 replacing the daemon-based approach with a more robust DAGman-based solution.
 """
 
-import os
 import argparse
 import shutil
 from pathlib import Path
@@ -99,87 +98,7 @@ class DAGManager:
         if isinstance(threest, bool):
             return threest
         raise TypeError(f"raw.threest type: {type(threest).__name__} not valid.")
-    # Template info
-    @property
-    def _tpl_dir(self) -> Path:
-        """Get template directory path."""
-        tpl_dir = self.config.tpl.dir
-        if isinstance(tpl_dir, str):
-            path = Path(tpl_dir)
-            if not path.exists():
-                raise FileNotFoundError(f"Template directory does not exist: {path}")
-            return path
-        raise TypeError(f"tpl.dir type: {type(tpl_dir).__name__} not valid.")
-    @property
-    def _tpl_inputforalign(self) -> Path:
-        """Get inputforalign template path."""
-        inputforalign = self.config.tpl.inputforalign
-        if isinstance(inputforalign, str):
-            path = self._tpl_dir / inputforalign
-            if not path.exists():
-                raise FileNotFoundError(f"Inputforalign template file does not exist: {path}")
-            return path
-        raise TypeError(f"tpl.inputforalign type: {type(inputforalign).__name__} not valid.")
-    @property
-    def _tpl_recosub(self) -> Path:
-        """Get reco submit template path."""
-        recosub = self.config.tpl.recosub
-        if isinstance(recosub, str):
-            path = self._tpl_dir / recosub
-            if not path.exists():
-                raise FileNotFoundError(f"Reco submit template file does not exist: {path}")
-            return path
-        raise TypeError(f"tpl.recosub type: {type(recosub).__name__} not valid.")
-    @property
-    def _tpl_recoexe(self) -> Path:
-        """Get reco executable template path."""
-        recoexe = self.config.tpl.recoexe
-        if isinstance(recoexe, str):
-            path = self._tpl_dir / recoexe
-            if not path.exists():
-                raise FileNotFoundError(f"Reco executable template file does not exist: {path}")
-            return path
-        raise TypeError(f"tpl.recoexe type: {type(recoexe).__name__} not valid.")
-    @property
-    def _tpl_recoenv(self) -> Path:
-        """Get reco environment script template path."""
-        recoenv = self.config.tpl.recoenv
-        if isinstance(recoenv, str):
-            path = self._tpl_dir / recoenv
-            if not path.exists():
-                raise FileNotFoundError(f"Reco environment script template file does not exist: {path}")
-            return path
-        raise TypeError(f"tpl.recoenv type: {type(recoenv).__name__} not valid.")
-    @property
-    def _tpl_millesub(self) -> Path:
-        """Get mille submit template path."""
-        millesub = self.config.tpl.millesub
-        if isinstance(millesub, str):
-            path = self._tpl_dir / millesub
-            if not path.exists():
-                raise FileNotFoundError(f"Mille submit template file does not exist: {path}")
-            return path
-        raise TypeError(f"tpl.millesub type: {type(millesub).__name__} not valid.")
-    @property
-    def _tpl_milleexe(self) -> Path:
-        """Get mille executable template path."""
-        milleexe = self.config.tpl.milleexe
-        if isinstance(milleexe, str):
-            path = self._tpl_dir / milleexe
-            if not path.exists():
-                raise FileNotFoundError(f"Mille executable template file does not exist: {path}")
-            return path
-        raise TypeError(f"tpl.milleexe type: {type(milleexe).__name__} not valid.")
-    @property
-    def _tpl_milleenv(self) -> Path:
-        """Get mille environment script template path."""
-        milleenv = self.config.tpl.milleenv
-        if isinstance(milleenv, str):
-            path = self._tpl_dir / milleenv
-            if not path.exists():
-                raise FileNotFoundError(f"Mille environment script template file does not exist: {path}")
-            return path
-        raise TypeError(f"tpl.milleenv type: {type(milleenv).__name__} not valid.")
+    
     # src info
     @property
     def _src_dir(self) -> Path:
@@ -191,6 +110,7 @@ class DAGManager:
                 raise FileNotFoundError(f"Source directory does not exist: {path}")
             return path
         raise TypeError(f"src.dir type: {type(src_dir).__name__} not valid.")
+    
     # Dag info
     @property
     def _dag_dir(self) -> Path:
@@ -215,26 +135,12 @@ class DAGManager:
             return self._dag_dir / reco_exe
         raise TypeError(f"dag.recoexe type: {type(reco_exe).__name__} not valid.")
     @property
-    def _dag_recoenv(self) -> Path:
-        """Get path for reconstruction environment script."""
-        reco_env = self.config.dag.recoenv
-        if isinstance(reco_env, str):
-            return self._dag_dir / reco_env
-        raise TypeError(f"dag.recoenv type: {type(reco_env).__name__} not valid.")
-    @property
     def _dag_milleexe(self) -> Path:
         """Get path for millepede executable."""
         mille_exe = self.config.dag.milleexe
         if isinstance(mille_exe, str):
             return self._dag_dir / mille_exe
         raise TypeError(f"dag.milleexe type: {type(mille_exe).__name__} not valid.")
-    @property
-    def _dag_milleenv(self) -> Path:
-        """Get path for millepede environment script."""
-        mille_env = self.config.dag.milleenv
-        if isinstance(mille_env, str):
-            return self._dag_dir / mille_env
-        raise TypeError(f"dag.milleenv type: {type(mille_env).__name__} not valid.")
     def _dag_iter_dir(self, iteration: int) -> Path:
         """Get directory for a specific iteration in the DAG."""
         iter_str = f"{iteration:02d}"
@@ -329,6 +235,7 @@ class DAGManager:
             logs_out_fmt = logs_out.format(iter=iter_str)
             return self._logs_dir(iteration) / logs_out_fmt
         raise TypeError(f"dag.iter.logs.milleout type: {type(logs_out).__name__} not valid.")
+    
     # Data info
     @property
     def _data_dir(self) -> Path:
@@ -368,8 +275,110 @@ class DAGManager:
             return iter_dir / millepede
         raise TypeError(f"data.iter.millepede type: {type(millepede).__name__} not valid.")
 
+    # Template info
+    @property
+    def _tpl_dir(self) -> Path:
+        """Get template directory path."""
+        tpl_dir = self.config.tpl.dir
+        if isinstance(tpl_dir, str):
+            path = Path(tpl_dir)
+            if not path.exists():
+                raise FileNotFoundError(f"Template directory does not exist: {path}")
+            return path
+        raise TypeError(f"tpl.dir type: {type(tpl_dir).__name__} not valid.")
+    @property
+    def _tpl_inputforalign(self) -> Path:
+        """Get inputforalign template path."""
+        inputforalign = self.config.tpl.inputforalign
+        if isinstance(inputforalign, str):
+            path = self._tpl_dir / inputforalign
+            if not path.exists():
+                raise FileNotFoundError(f"Inputforalign template file does not exist: {path}")
+            return path
+        raise TypeError(f"tpl.inputforalign type: {type(inputforalign).__name__} not valid.")
+    @property
+    def _tpl_recosub(self) -> Path:
+        """Get reco submit template path."""
+        recosub = self.config.tpl.recosub
+        if isinstance(recosub, str):
+            path = self._tpl_dir / recosub
+            if not path.exists():
+                raise FileNotFoundError(f"Reco submit template file does not exist: {path}")
+            return path
+        raise TypeError(f"tpl.recosub type: {type(recosub).__name__} not valid.")
+    @property
+    def _tpl_recoexe(self) -> Path:
+        """Get reco executable template path."""
+        recoexe = self.config.tpl.recoexe
+        if isinstance(recoexe, str):
+            path = self._tpl_dir / recoexe
+            if not path.exists():
+                raise FileNotFoundError(f"Reco executable template file does not exist: {path}")
+            return path
+        raise TypeError(f"tpl.recoexe type: {type(recoexe).__name__} not valid.")
+    @property
+    def _tpl_millesub(self) -> Path:
+        """Get mille submit template path."""
+        millesub = self.config.tpl.millesub
+        if isinstance(millesub, str):
+            path = self._tpl_dir / millesub
+            if not path.exists():
+                raise FileNotFoundError(f"Mille submit template file does not exist: {path}")
+            return path
+        raise TypeError(f"tpl.millesub type: {type(millesub).__name__} not valid.")
+    @property
+    def _tpl_milleexe(self) -> Path:
+        """Get mille executable template path."""
+        milleexe = self.config.tpl.milleexe
+        if isinstance(milleexe, str):
+            path = self._tpl_dir / milleexe
+            if not path.exists():
+                raise FileNotFoundError(f"Mille executable template file does not exist: {path}")
+            return path
+        raise TypeError(f"tpl.milleexe type: {type(milleexe).__name__} not valid.")
 
-    
+    # Env info
+    @property
+    def _env_calypso_asetup(self) -> Path:
+        """Get Calypso asetup script path from configuration."""
+        asetup = self.config.env.calypso.asetup
+        if isinstance(asetup, str):
+            path = Path(asetup)
+            if not path.exists():
+                raise FileNotFoundError(f"Calypso asetup script file does not exist: {path}")
+            return path
+        raise TypeError(f"env.calypso.asetup type: {type(asetup).__name__} not valid.")
+    @property
+    def _env_calypso_setup(self) -> Path:
+        """Get Calypso setup script path from configuration."""
+        setup = self.config.env.calypso.setup
+        if isinstance(setup, str):
+            path = Path(setup)
+            if not path.exists():
+                raise FileNotFoundError(f"Calypso setup script file does not exist: {path}")
+            return path
+        raise TypeError(f"env.calypso.setup type: {type(setup).__name__} not valid.")
+    @property
+    def _env_pede(self) -> Path:
+        """Get Millepede installation directory path from configuration."""
+        pede = self.config.env.pede
+        if isinstance(pede, str):
+            path = Path(pede)
+            if not path.exists():
+                raise FileNotFoundError(f"Millepede installation directory does not exist: {path}")
+            return path
+        raise TypeError(f"env.pede type: {type(pede).__name__} not valid.")
+    @property
+    def _env_root(self) -> Path:
+        """Get ROOT setup script path from configuration."""
+        root = self.config.env.root
+        if isinstance(root, str):
+            path = Path(root)
+            if not path.exists():
+                raise FileNotFoundError(f"ROOT setup script file does not exist: {path}")
+            return path
+        raise TypeError(f"env.root type: {type(root).__name__} not valid.")
+
 
     def create_data_dirs(self) -> None:
         """Create data directories for all iterations."""
@@ -432,7 +441,7 @@ class DAGManager:
         reco_dir = self._reco_dir(it)
         shutil.copy(self._tpl_inputforalign, reco_dir)
     
-    def create_reco_exeenv_files(self) -> None:
+    def create_reco_exe_files(self) -> None:
         """Create reco executable and environment script in DAG directory."""
         # Copy reco executable
         dag_recoexe = self._dag_recoexe
@@ -440,12 +449,6 @@ class DAGManager:
             ColorfulPrint.print_yellow(f"Warning: ")
             print(f"Overwritting reco executable: {dag_recoexe}")
         shutil.copy(self._tpl_recoexe, dag_recoexe)
-        # Copy reco environment script
-        dag_recoenv = self._dag_recoenv
-        if dag_recoenv.exists():
-            ColorfulPrint.print_yellow(f"Warning: ")
-            print(f"Overwritting reco environment script: {dag_recoenv}")
-        shutil.copy(self._tpl_recoenv, dag_recoenv)
     
     def create_reco_submit_files(self) -> None:
         """Create reco submit files for all iterations and raw files."""
@@ -461,8 +464,6 @@ class DAGManager:
                     raise FileNotFoundError(f"Reco directory not found: {self._reco_dir(it)}")
                 if not self._kfalign_dir(it).exists():
                     raise FileNotFoundError(f"KF alignment directory not found: {self._kfalign_dir(it)}")
-                if not self._dag_recoenv.exists():
-                    raise FileNotFoundError(f"Reco environment script not found: {self._dag_recoenv}")
                 sub_content = tpl_content.format(
                     year=self._year,
                     run=self._run,
@@ -476,7 +477,8 @@ class DAGManager:
                     reco_dir=self._reco_dir(it),
                     kfalign_dir=self._kfalign_dir(it),
                     src_dir=self._src_dir,
-                    env_path=self._dag_recoenv
+                    calypso_asetup=self._env_calypso_asetup,
+                    calypso_setup=self._env_calypso_setup,
                 )
                 recosub = self._dag_recosub(it, file_str)
                 if recosub.exists():
@@ -485,114 +487,7 @@ class DAGManager:
                 with open(recosub, 'w') as sub_file:
                     sub_file.write(sub_content)
 
-
-#     def create_reco_submit_file(
-#         self, 
-#         output_dir: Path,
-#         iteration: int,
-#         year: str,
-#         run: str,
-#         file_str: str,
-#         fourst: bool,
-#         threest: bool,
-#         src_dir: Path,
-#         env_path: Path,
-#         work_dir: Path
-#     ) -> Path:
-#         """
-#         Create HTCondor submit file for a single reconstruction job.
-        
-#         Args:
-#             output_dir: Main output directory for job data
-#             iteration: Iteration number
-#             year: Year of data taking
-#             run: Run number (6 digits)
-#             file_str: File number as string (e.g., "00400")
-#             fourst: Enable 4-station mode
-#             threest: Enable 3-station mode
-#             src_dir: Source directory path
-#             env_path: Environment script path
-#             work_dir: Work directory for DAG and log files
-            
-#         Returns:
-#             Path to created submit file
-#         """
-#         iter_str = f"iter{iteration:02d}"
-#         reco_dir = self._reco_dir(iteration)
-#         kfalign_dir = self._kfalign_dir(iteration)
-        
-#         # Create individual submit file for this file in work_dir
-#         submit_file = work_dir / iter_str / f"reco_{iter_str}_{file_str}.sub"
-#         exe_path = work_dir / iter_str / "runAlignment.sh"
-#         exe_path.parent.mkdir(parents=True, exist_ok=True)
-#         shutil.copy(src_dir / "runAlignment.sh", exe_path)
-        
-#         # Log files go in work_dir to avoid collisions between parallel DAGs
-#         log_dir = work_dir / iter_str / self.LOGS_DIR
-#         log_dir.mkdir(parents=True, exist_ok=True)
-        
-#         submit_content = f"""# HTCondor submit file for reconstruction job (file {file_str})
-# universe = vanilla
-# executable = {exe_path}
-
-# output = {log_dir}/reco_{iter_str}_{file_str}.out
-# error  = {log_dir}/reco_{iter_str}_{file_str}.err
-# log    = {log_dir}/reco_{iter_str}_{file_str}.log
-
-# request_cpus = {self.config.get('htcondor.reco.request_cpus', 1)}
-# request_memory = {self.config.get('htcondor.reco.request_memory', '2 GB')}
-# request_disk = {self.config.get('htcondor.reco.request_disk', '2 GB')}
-# should_transfer_files = YES
-# when_to_transfer_output = ON_EXIT
-# transfer_output_files = logs/
-
-# +JobFlavour = "{self.config.get('htcondor.reco.job_flavour', 'workday')}"
-# on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)
-# max_retries = {self.config.get('htcondor.reco.max_retries', 3)}
-# requirements = {self.config.get('htcondor.requirements', self.DEFAULT_REQUIREMENTS)}
-
-# arguments = {year} {run} {file_str} {fourst} {threest} {reco_dir} {kfalign_dir} {src_dir} {env_path}
-# queue
-# """
-        
-#         # Write submit file
-#         submit_file.parent.mkdir(parents=True, exist_ok=True)
-#         with open(submit_file, 'w') as f:
-#             f.write(submit_content)
-        
-#         return submit_file
-
-
-
-    # def _create_setup_job_script(self, output_dir: Path, iteration: int) -> None:
-    #     """
-    #     Create setup script for an iteration (prepare directories and input files).
-        
-    #     Args:
-    #         output_dir: Main output directory
-    #         iteration: Iteration number
-    #     """
-    #     iter_str = f"iter{iteration:02d}"
-    #     iter_dir = output_dir / iter_str
-    #     reco_dir = iter_dir / "1reco"
-    #     kfalign_dir = iter_dir / "2kfalignment"
-    #     millepede_dir = iter_dir / "3millepede"
-        
-    #     # Create directories
-    #     reco_dir.mkdir(parents=True, exist_ok=True)
-    #     kfalign_dir.mkdir(parents=True, exist_ok=True)
-    #     millepede_dir.mkdir(parents=True, exist_ok=True)
-        
-    #     # Prepare inputforalign.txt
-    #     # For iteration 1, create empty file
-    #     # For subsequent iterations, create empty placeholder
-    #     # (actual alignment constants will be copied by pre-script during job execution)
-    #     input_path = reco_dir / "inputforalign.txt"
-    #     template_path = Path(__file__).parent / "templates" / "inputforalign.txt"
-    #     shutil.copy(template_path, input_path)
-
-
-    def create_mille_exeenv_files(self) -> None:
+    def create_mille_exe_files(self) -> None:
         """Create millepede executable and environment script in DAG directory."""
         # Copy millepede executable
         dag_milleexe = self._dag_milleexe
@@ -600,12 +495,6 @@ class DAGManager:
             ColorfulPrint.print_yellow(f"Warning: ")
             print(f"Overwritting millepede executable: {dag_milleexe}")
         shutil.copy(self._tpl_milleexe, dag_milleexe)
-        # Copy millepede environment script
-        dag_milleenv = self._dag_milleenv
-        if dag_milleenv.exists():
-            ColorfulPrint.print_yellow(f"Warning: ")
-            print(f"Overwritting millepede environment script: {dag_milleenv}")
-        shutil.copy(self._tpl_milleenv, dag_milleenv)
     
     def create_mille_submit_files(self) -> None:
         """Create millepede submit files for all iterations."""
@@ -618,18 +507,17 @@ class DAGManager:
                 raise FileNotFoundError(f"Logs directory not found: {self._logs_dir(it)}")
             if not self._kfalign_dir(it).exists():
                 raise FileNotFoundError(f"KF alignment directory not found: {self._kfalign_dir(it)}")
-            if not self._dag_milleenv.exists():
-                raise FileNotFoundError(f"Millepede environment script not found: {self._dag_milleenv}")
             sub_content = tpl_content.format(
                 exe_path=self._dag_milleexe,
                 out_path=self._logs_mille_out(it),
                 err_path=self._logs_mille_err(it),
                 log_path=self._logs_mille_log(it),
                 to_next_iter=(it < self._iters_int - 1),
-                env_path=self._dag_milleenv,
                 src_dir=self._src_dir,
                 kfalign_dir=self._kfalign_dir(it),
-                next_reco_dir=self._reco_dir(it + 1) if it < self._iters_int - 1 else ""
+                next_reco_dir=self._reco_dir(it + 1) if it < self._iters_int - 1 else "",
+                env_pede=self._env_pede,
+                env_root=self._env_root
             )
             millesub = self._dag_millesub(it)
             if millesub.exists():
@@ -637,100 +525,6 @@ class DAGManager:
                 print(f"Overwritting millepede submit file: {millesub}")
             with open(millesub, 'w') as sub_file:
                 sub_file.write(sub_content)
-
-
-
-
-
-#     def create_millepede_submit_file(
-#         self,
-#         output_dir: Path,
-#         iteration: int,
-#         src_dir: Path,
-#         env_path: Path,
-#         work_dir: Path,
-#         to_next_iter: bool = True
-#     ) -> Path:
-#         """
-#         Create HTCondor submit file for Millepede job.
-        
-#         Args:
-#             output_dir: Main output directory for job data
-#             iteration: Iteration number
-#             src_dir: Source directory path
-#             env_path: Environment script path
-#             work_dir: Work directory for DAG and log files
-#             to_next_iter: Whether to copy results to next iteration
-            
-#         Returns:
-#             Path to created submit file
-#         """
-#         iter_str = f"iter{iteration:02d}"
-#         millepede_dir = output_dir / iter_str / "3millepede"
-#         kfalign_dir = output_dir / iter_str / "2kfalignment"
-        
-#         # Submit file and wrapper script go in work_dir
-#         submit_file = work_dir / iter_str / "millepede.sub"
-#         wrapper_script = work_dir / iter_str / "run_millepede.sh"
-        
-#         # Log files go in work_dir to avoid collisions between parallel DAGs
-#         log_dir = work_dir / iter_str / self.LOGS_DIR
-#         log_dir.mkdir(parents=True, exist_ok=True)
-#         wrapper_content = f"""#!/bin/bash
-# set -e
-
-# echo "Setting up environment..."
-# source {env_path}
-
-# echo "Running Millepede..."
-# python3 {src_dir}/millepede/bin/millepede.py -i {kfalign_dir}
-
-# echo "Millepede completed successfully."
-# """
-#         if to_next_iter:
-#             next_iter_str = f"iter{iteration+1:02d}"
-#             next_input = output_dir / next_iter_str / "1reco" / "inputforalign.txt"
-#             wrapper_content += f"""
-# echo "Transferring alignment constants to next iteration..."
-# if [ -f "{output_dir / iter_str}/inputforalign.txt" ]; then
-#     cp "{output_dir / iter_str}/inputforalign.txt" "{next_input}"
-#     echo "Alignment constants transferred successfully."
-# else
-#     echo "Warning: Alignment constants not found. Using empty file."
-#     touch "{next_input}"
-# fi
-# """
-#         wrapper_script.parent.mkdir(parents=True, exist_ok=True)
-#         with open(wrapper_script, 'w') as f:
-#             f.write(wrapper_content)
-#         os.chmod(wrapper_script, 0o755)
-        
-#         submit_content = f"""# HTCondor submit file for Millepede job
-# universe = vanilla
-# executable = {wrapper_script}
-
-# output = {log_dir}/millepede.out
-# error  = {log_dir}/millepede.err
-# log    = {log_dir}/millepede.log
-
-# request_cpus = {self.config.get('htcondor.millepede.request_cpus', 1)}
-# request_memory = {self.config.get('htcondor.millepede.request_memory', '2 GB')}
-# request_disk = {self.config.get('htcondor.millepede.request_disk', '2 GB')}
-# should_transfer_files = YES
-# when_to_transfer_output = ON_EXIT
-
-# +JobFlavour = "{self.config.get('htcondor.millepede.job_flavour', 'workday')}"
-# on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)
-# max_retries = {self.config.get('htcondor.millepede.max_retries', 2)}
-
-# queue
-# """
-        
-#         with open(submit_file, 'w') as f:
-#             f.write(submit_content)
-        
-#         return submit_file
-
 
     def create_dag_file(self) -> Path:
         """Create DAG file for complete alignment workflow."""
@@ -771,98 +565,6 @@ class DAGManager:
         with open(dag_file, 'w') as f:
             f.write(dag_content)
         return dag_file
-
-    # def create_dag_file(
-    #     self,
-    #     output_dir: Path,
-    #     year: str,
-    #     run: str,
-    #     file_list: RawList,
-    #     iterations: int,
-    #     fourst: bool,
-    #     threest: bool,
-    #     src_dir: Path,
-    #     reco_env_path: Path,
-    #     millepede_env_path: Path,
-    #     work_dir: Path
-    # ) -> Path:
-    #     """
-    #     Create HTCondor DAG file for complete alignment workflow.
-        
-    #     Args:
-    #         output_dir: Main output directory for job data
-    #         year: Year of data taking
-    #         run: Run number (6 digits)
-    #         file_list: RawList object with file numbers
-    #         iterations: Number of iterations to perform
-    #         fourst: Enable 4-station mode
-    #         threest: Enable 3-station mode
-    #         src_dir: Source directory path
-    #         reco_env_path: Reconstruction environment script path
-    #         millepede_env_path: Millepede environment script path
-    #         work_dir: Work directory for DAG and log files
-            
-    #     Returns:
-    #         Path to created DAG file
-    #     """
-    #     dag_file = self._dag_file
-        
-    #     dag_content = "# HTCondor DAG for FASER alignment workflow\n\n"
-        
-    #     # Create jobs for each iteration
-    #     for it in range(1, iterations + 1):
-    #         # Setup job script for each iteration
-    #         self._create_setup_job_script(output_dir, it)
-            
-    #         # Create individual reconstruction jobs for each file
-    #         dag_content += f"# Iteration {it} reconstruction jobs\n"
-    #         reco_jobs = []
-    #         for file_str in file_list:
-    #             job_name = f"reco_{it:02d}_{file_str}"
-    #             reco_jobs.append(job_name)
-    #             reco_submit = self.create_reco_submit_file(
-    #                 output_dir, it, year, run, file_str, fourst, threest, src_dir, reco_env_path, work_dir
-    #             )
-    #             dag_content += f"JOB {job_name} {reco_submit}\n"
-            
-    #         # Millepede job
-    #         dag_content += f"\n# Iteration {it} millepede job\n"
-    #         mille_submit = self.create_millepede_submit_file(
-    #             output_dir, it, src_dir, millepede_env_path, work_dir,
-    #             to_next_iter=(it < iterations)
-    #         )
-    #         dag_content += f"JOB millepede_{it:02d} {mille_submit}\n"
-            
-    #         # Add dependencies
-    #         dag_content += f"\n# Iteration {it} dependencies\n"
-    #         # All reconstruction jobs must complete before millepede
-    #         for reco_job in reco_jobs:
-    #             dag_content += f"PARENT {reco_job} CHILD millepede_{it:02d}\n"
-            
-    #         # Link iterations - millepede from previous iteration must complete
-    #         # before any reconstruction job in the current iteration starts
-    #         if it > 1:
-    #             for reco_job in reco_jobs:
-    #                 dag_content += f"PARENT millepede_{it-1:02d} CHILD {reco_job}\n"
-            
-    #         dag_content += "\n"
-        
-    #     # Add retry settings
-    #     dag_content += "# Retry settings\n"
-    #     for it in range(1, iterations + 1):
-    #         for file_str in file_list:
-    #             job_name = f"reco_{it:02d}_{file_str}"
-    #             dag_content += f"RETRY {job_name} 2\n"
-    #         dag_content += f"RETRY millepede_{it:02d} 1\n"
-        
-    #     # Write DAG file
-    #     with open(dag_file, 'w') as f:
-    #         f.write(dag_content)
-        
-    #     print(f"Created DAG file: {dag_file}")
-    #     return dag_file
-
-    
 
 
 
@@ -942,9 +644,9 @@ def main():
     dag_manager.create_data_dirs()
     dag_manager.creat_dag_dirs()
     dag_manager.copy_first_inputforalign()
-    dag_manager.create_reco_exeenv_files()
+    dag_manager.create_reco_exe_files()
     dag_manager.create_reco_submit_files()
-    dag_manager.create_mille_exeenv_files()
+    dag_manager.create_mille_exe_files()
     dag_manager.create_mille_submit_files()
     dag_path = dag_manager.create_dag_file()
     dag_dir = dag_path.parent

@@ -16,5 +16,5 @@ when_to_transfer_output = ON_EXIT
 on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)
 max_retries = 2
 
-arguments = {to_next_iter} {env_path} {src_dir} {kfalign_dir} {next_reco_dir}
+arguments = {to_next_iter} {src_dir} {kfalign_dir} {next_reco_dir} {env_pede} {env_root}
 queue

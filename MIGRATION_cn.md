@@ -1,24 +1,5 @@
 # 迁移指南：从守护进程到 DAGman
 
-本指南帮助用户从旧的基于守护进程的方法（`auto_iter.py`）过渡到新的基于 HTCondor DAGman 的方法（`dag_manager.py`）。
-
-## 为什么要迁移？
-
-使用 `nohup` 的 `auto_iter.py` 守护进程方法在 CERN lxplus 上**不受官方支持**。HTCondor DAGman 是管理作业工作流的推荐和支持方法。
-
-### 对比
-
-| 方面 | 守护进程（`auto_iter.py`） | DAGman（`dag_manager.py`） |
-|--------|------------------------|---------------------------|
-| **lxplus 支持** | ❌ 非官方 | ✅ 官方支持 |
-| **设置复杂度** | 中等 | 低（自动化） |
-| **作业依赖** | 手动轮询 | 自动管理 |
-| **故障恢复** | 基于脚本 | 内置重试 + 挽救 DAG |
-| **监控** | 自定义日志 | 标准 HTCondor 工具 |
-| **资源使用** | 持久守护进程 | 无持久进程 |
-| **可扩展性** | 有限 | 优秀 |
-
-## 迁移步骤
 
 ### 步骤 1：初始设置
 
@@ -136,68 +117,6 @@ Y2023_R011705_F450-500/
 └── ...
 ```
 
-## 关键差异
-
-### 1. 配置
-
-**旧：** 路径硬编码在脚本中
-```python
-env_path = "/eos/home-s/shunlian/Alignment/env.sh"
-```
-
-**新：** 路径在 config.json 中
-```json
-{
-  "paths": {
-    "env_script": "reco_condor_env.sh"
-  }
-}
-```
-
-### 2. 作业提交
-
-**旧：** 守护进程循环内手动提交
-```python
-subprocess.run(["condor_submit", "-spool", sub_path])
-# 然后轮询完成
-```
-
-**新：** DAG 处理提交和依赖关系
-```python
-# DAG 自动管理所有作业提交
-# 无需轮询
-```
-
-### 3. 作业依赖
-
-**旧：** 带睡眠的手动轮询
-```python
-while True:
-    time.sleep(300)
-    # 检查作业是否完成
-```
-
-**新：** 通过 DAG 自动
-```
-PARENT reco_01 CHILD millepede_01
-PARENT millepede_01 CHILD reco_02
-```
-
-### 4. 故障处理
-
-**旧：** 脚本在失败时退出
-```python
-if hold_count != 0:
-    print("Error: Some jobs are on hold.")
-    sys.exit(1)
-```
-
-**新：** 自动重试 + 挽救 DAG
-```
-RETRY reco_01 2
-RETRY millepede_01 1
-# 加上自动挽救 DAG 生成
-```
 
 ## 测试您的迁移
 
