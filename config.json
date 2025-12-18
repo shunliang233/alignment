@@ -3,10 +3,9 @@
     "year": 2023,
     "run": 11705,
     "files": "401-431",
-    "iters": 3,
-    "format": "Y{year}_R{run}_F{files}",
-    "fourst": false,
-    "threest": true
+    "iters": 5,
+    "stations": 4,
+    "format": "Y{year}_R{run}_F{files}_ST{stations}"
   },
   "dag": {
     "dir": "/afs/cern.ch/user/s/shunlian/alignment/dag_files/{format}",

@@ -1,22 +1,20 @@
 #!/bin/bash
 
-# Usage: ./runAlignment.sh <YEAR> <RUN> <FILE> <FOURST> <THREEST> <RECO_DIR> <KFALIGN_DIR> <SRC_DIR> <CALYPSO_ASETUP> <CALYPSO_SETUP>
+# Usage: ./runAlignment.sh <YEAR> <RUN> <STATIONS> <FILE> <RECO_DIR> <KFALIGN_DIR> <SRC_DIR> <CALYPSO_ASETUP> <CALYPSO_SETUP>
 YEAR=$1
 RUN=$2
-FILE=$3
-FOURST=$4
-THREEST=$5
-RECO_DIR=$6
-KFALIGN_DIR=$7
-SRC_DIR=$8
-CALYPSO_ASETUP=$9
-CALYPSO_SETUP=${10}
+STATIONS=$3
+FILE=$4
+RECO_DIR=$5
+KFALIGN_DIR=$6
+SRC_DIR=$7
+CALYPSO_ASETUP=$8
+CALYPSO_SETUP=$9
 echo "Running with parameters:"
 echo " Year: $YEAR"
 echo " Run: $RUN"
+echo " Stations: $STATIONS"
 echo " File: $FILE"
-echo " FOURST: $FOURST"
-echo " THREEST: $THREEST"
 echo " RecoDir: $RECO_DIR"
 echo " KFAlignDir: $KFALIGN_DIR"
 echo " SrcDir: $SRC_DIR"
@@ -73,12 +71,15 @@ chmod 755 ./aligndb_copy.sh
 ./aligndb_copy.sh >& aligndb_copy.log
 echo "=== Finished aligndb_copy.sh ==="
 
-# Build the command based on THREEST and FOURST flags
+# Build the command based on number of stations
 FILE_PATH="/eos/experiment/faser/raw/${YEAR}/${RUN}/Faser-Physics-${RUN}-${FILE}.raw"
-if [ "$THREEST" = "True" ]; then
+if [ "$STATIONS" = "3" ]; then
     CMD="python $SRC_DIR/faser_reco_alignment.py \"$FILE_PATH\" --alignment --noBackward --noIFT"
-elif [ "$FOURST" = "True" ]; then
+elif [ "$STATIONS" = "4" ]; then
     CMD="python $SRC_DIR/faser_reco_alignment.py \"$FILE_PATH\" --alignment --noBackward"
+else
+    echo "Error: STATIONS must be 3 or 4, got: $STATIONS"
+    exit 1
 fi
 echo "=== Running command: $CMD ==="
 eval $CMD

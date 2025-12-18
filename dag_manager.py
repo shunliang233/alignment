@@ -82,22 +82,18 @@ class DAGManager:
             year = self._year
             run = self._run
             files = self._files
-            return fmt.format(year=year, run=run, files=files)
+            stations = self._stations
+            return fmt.format(year=year, run=run, files=files, stations=stations)
         raise TypeError(f"raw.format type: {type(fmt).__name__} not valid.")
     @property
-    def _fourst(self) -> bool:
-        """Get fourst boolean from configuration."""
-        fourst = self.config.raw.fourst
-        if isinstance(fourst, bool):
-            return fourst
-        raise TypeError(f"raw.fourst type: {type(fourst).__name__} not valid.")
-    @property
-    def _threest(self) -> bool:
-        """Get threest boolean from configuration."""
-        threest = self.config.raw.threest
-        if isinstance(threest, bool):
-            return threest
-        raise TypeError(f"raw.threest type: {type(threest).__name__} not valid.")
+    def _stations(self) -> int:
+        """Get number of stations from configuration."""
+        stations = self.config.raw.stations
+        if isinstance(stations, int):
+            if stations not in (3, 4):
+                raise ValueError(f"raw.stations must be 3 or 4, got {stations}")
+            return stations
+        raise TypeError(f"raw.stations type: {type(stations).__name__} not valid.")
     
     # src info
     @property
@@ -442,8 +438,7 @@ class DAGManager:
         shutil.copy(self._tpl_inputforalign, reco_dir)
     
     def create_reco_exe_files(self) -> None:
-        """Create reco executable and environment script in DAG directory."""
-        # Copy reco executable
+        """Create reco executable script in DAG directory."""
         dag_recoexe = self._dag_recoexe
         if dag_recoexe.exists():
             ColorfulPrint.print_yellow(f"Warning: ")
@@ -467,9 +462,8 @@ class DAGManager:
                 sub_content = tpl_content.format(
                     year=self._year,
                     run=self._run,
+                    stations=self._stations,
                     file_str=file_str,
-                    fourst=self._fourst,
-                    threest=self._threest,
                     exe_path=self._dag_recoexe,
                     out_path=self._logs_reco_out(it, file_str),
                     err_path=self._logs_reco_err(it, file_str),
@@ -488,8 +482,7 @@ class DAGManager:
                     sub_file.write(sub_content)
 
     def create_mille_exe_files(self) -> None:
-        """Create millepede executable and environment script in DAG directory."""
-        # Copy millepede executable
+        """Create millepede executable script in DAG directory."""
         dag_milleexe = self._dag_milleexe
         if dag_milleexe.exists():
             ColorfulPrint.print_yellow(f"Warning: ")
