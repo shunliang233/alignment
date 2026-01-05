@@ -1,19 +1,15 @@
-# Build and installation directories
-
-# Compilation products
+# # Compilation products
 __pycache__/
 *.pyc
-
-# CMake generated files
+build/
+bin/
 
 # Operation system files
 .DS_Store
 Thumbs.db
 
 # Editor
-.vscode
-
-# Compiler and debugger files
+.vscode/
 
 # Submit files
 /dag_files/
@@ -27,8 +23,7 @@ Thumbs.db
 *.out
 *.stderr
 *.stdout
-
-# Package manager directories (if used)
+*.pdf
 
 # Incomplete projects
 /auto-copy/

@@ -19,5 +19,5 @@ class BranchInfo:
         return f"BranchInfo(name='{self.name}', type='{self.typename}', title='{self.title}')"
     
     def __str__(self) -> str:
-        return f"{self.name:30s} {self.typename:20s} {self.title}"
+        return f"{self.name:50s} {self.typename:20s}"
 

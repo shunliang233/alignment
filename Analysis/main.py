@@ -1,4 +1,3 @@
-
 import argparse
 
 from Analyser import Analyser
@@ -14,11 +13,17 @@ def main():
                         help='Show data from specific branch')
     parser.add_argument('-n', '--entries', type=int, 
                         help='Number of entries to display')
+    parser.add_argument('-o', '--output', type=str, default='vector_lengths.pdf',
+                        help='Output PDF file for vector length histograms (default: vector_lengths.pdf)')
+    parser.add_argument('--vector-only', action='store_true',
+                        help='Only analyze vector branches and generate histograms')
     
     args = parser.parse_args()
     
     try:
-        with Analyser(args.file, args.tree) as analyser:
+        analyser = Analyser(args.file, args.tree)
+        
+        if not args.vector_only:
             analyser.print_summary()
             
             if args.branch:
@@ -27,9 +32,15 @@ def main():
                 data = analyser.get_branch_data(args.branch, args.entries)
                 for i, value in enumerate(data):
                     print(f"Entry {i}: {value}")
+        
+        # Analyze vector branches and create histograms
+        print("\nAnalyzing vector branches...")
+        analyser.create_vector_length_histograms(output_pdf=args.output)
     
     except Exception as e:
         print(f"Error: {e}")
+        import traceback
+        traceback.print_exc()
         return 1
     
     return 0

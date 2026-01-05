@@ -6,6 +6,9 @@ This module provides a class to read and analyze TTree structure and branch info
 """
 
 import ROOT
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 
 from pathlib import Path
 from typing import Dict, List, Optional, Union, Any, cast
@@ -53,22 +56,25 @@ class Analyser:
         if not self.file_path.exists():
             raise FileNotFoundError(f"ROOT file not found: {self.file_path}")
         # Check File Validity
-        self.root_file = cast(TFile, ROOT.TFile.Open(str(self.file_path)))
-        if not self.root_file or self.root_file.IsZombie():
+        self.file = cast(TFile, ROOT.TFile.Open(str(self.file_path)))
+        if not self.file or self.file.IsZombie():
             raise RuntimeError(f"Cannot open ROOT file: {self.file_path}")
         # Get TTree
         self.tree_name = tree_name
-        self.tree = cast(TTree, self.root_file.Get(tree_name))
+        self.tree = cast(TTree, self.file.Get(tree_name))
         if not self.tree:
-            self.root_file.Close()
+            self.file.Close()
             raise RuntimeError(f"TTree '{tree_name}' not found in {self.file_path}")
+        
         # Initialize Branch Dictionary
         self._branches: Dict[str, BranchInfo] = {}
+        # Cache for vector branches
+        self._vector_branches_cache: Optional[Dict[str, str]] = None
     
     def _close(self):
         """Close ROOT file if it's open."""
-        if hasattr(self, 'root_file') and self.root_file and self.root_file.IsOpen():
-            self.root_file.Close()
+        if hasattr(self, 'file') and self.file and self.file.IsOpen():
+            self.file.Close()
     def __del__(self):
         """Clean up ROOT file when object is destroyed."""
         self._close()
@@ -138,7 +144,7 @@ class Analyser:
         print(f"Branches: {len(self.branches)}")
         print("\nBranch Information:")
         print("-" * 80)
-        print(f"{'Name':<30} {'Type':<20} {'Title'}")
+        print(f"{'Name':50} {'Type':20}")
         print("-" * 80)
         for branch_info in self.branches.values():
             print(branch_info)
@@ -194,3 +200,133 @@ class Analyser:
         print(f"Baskets:        {branch.GetWriteBasket()}")
         print(f"Basket Size:    {branch.GetBasketSize()} bytes")
     
+    def get_vector_branches(self) -> Dict[str, str]:
+        """
+        Get all vector-type branches.
+        
+        Returns:
+            Dictionary mapping branch name to type name
+        """
+        # Return cached result if available
+        if self._vector_branches_cache is not None:
+            return self._vector_branches_cache
+        
+        vector_branches = {}
+        branch_list = cast(TObjArray, self.tree.GetListOfBranches())
+        
+        for i in range(branch_list.GetEntries()):
+            branch = cast(TBranch, branch_list.At(i))
+            branch_name: str = branch.GetName()
+            type_name: str = branch.GetClassName()
+            
+            # Check if branch is a vector type
+            if type_name and ('vector' in type_name.lower() or type_name.startswith('std::vector')):
+                vector_branches[branch_name] = type_name
+        
+        # Cache the result
+        self._vector_branches_cache = vector_branches
+        return vector_branches
+    
+    def get_vector_lengths(self, branch_name: str, max_entries: Optional[int] = None) -> List[int]:
+        """
+        Get vector lengths for all entries in a vector branch.
+        
+        Args:
+            branch_name: Name of the vector branch
+            max_entries: Maximum number of entries to read (default: all)
+            
+        Returns:
+            List of vector lengths
+            
+        Raises:
+            ValueError: If branch is not a vector type
+        """
+        vector_branches = self.get_vector_branches()
+        if branch_name not in vector_branches:
+            raise ValueError(f"Branch '{branch_name}' is not a vector type")
+        
+        lengths = []
+        n_entries = min(self.entries, max_entries) if max_entries else self.entries
+        
+        for i in range(n_entries):
+            self.tree.GetEntry(i)
+            vec = getattr(self.tree, branch_name)
+            if vec is not None:
+                lengths.append(len(vec))
+        
+        return lengths
+    
+    def create_vector_length_histograms(self, output_pdf: str = 'vector_lengths.pdf',
+                                       branches: Optional[List[str]] = None) -> None:
+        """
+        Create histograms of vector lengths for all vector branches and save to PDF.
+        
+        Args:
+            output_pdf: Output PDF file path (default: 'vector_lengths.pdf')
+            branches: List of specific branches to plot (default: all vector branches)
+        """
+        vector_branches = self.get_vector_branches()
+        
+        if not vector_branches:
+            print("No vector branches found in the tree.")
+            return
+        
+        # Filter branches if specified
+        if branches:
+            vector_branches = {k: v for k, v in vector_branches.items() if k in branches}
+            if not vector_branches:
+                print(f"None of the specified branches are vector types.")
+                return
+        
+        print(f"Analyzing {len(vector_branches)} vector branch(es)...")
+        
+        with PdfPages(output_pdf) as pdf:
+            for branch_name, type_name in vector_branches.items():
+                print(f"Processing: {branch_name} (type: {type_name})")
+                
+                try:
+                    lengths = self.get_vector_lengths(branch_name)
+                    
+                    if not lengths:
+                        print(f"  Warning: No data for {branch_name}")
+                        continue
+                    
+                    # Create histogram
+                    fig, ax = plt.subplots(figsize=(10, 6))
+                    
+                    # Use integer bins: one bin per integer value
+                    min_len = min(lengths)
+                    max_len = max(lengths)
+                    bins = np.arange(min_len, max_len + 2) - 0.5  # Center bins on integers
+                    
+                    ax.hist(lengths, bins=bins, edgecolor='black', alpha=0.7)
+                    ax.set_xlabel('Vector Length')
+                    ax.set_ylabel('Frequency')
+                    ax.set_title(f'Vector Length Distribution: {branch_name}')
+                    ax.grid(True, alpha=0.3)
+                    
+                    # Set integer ticks on x-axis
+                    ax.set_xticks(range(min_len, max_len + 1))
+                    
+                    # Add statistics text
+                    stats_text = f'Entries: {len(lengths)}\n'
+                    stats_text += f'Mean: {np.mean(lengths):.2f}\n'
+                    stats_text += f'Std: {np.std(lengths):.2f}\n'
+                    stats_text += f'Min: {min_len}\n'
+                    stats_text += f'Max: {max_len}'
+                    ax.text(0.98, 0.97, stats_text,
+                           transform=ax.transAxes,
+                           verticalalignment='top',
+                           horizontalalignment='right',
+                           bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+                    
+                    plt.tight_layout()
+                    pdf.savefig(fig)
+                    plt.close(fig)
+                    
+                except Exception as e:
+                    print(f"  Error processing {branch_name}: {e}")
+                    continue
+        
+        print(f"\nHistograms saved to: {output_pdf}")
+        print(f"Total vector branches analyzed: {len(vector_branches)}")
