@@ -1,0 +1,189 @@
+ ($Id: 686292e46bfdda2b2b6d721969a8d471462099b5 $)
+  
+ Log-file Millepede II-P                        Sun Jun 30 19:10:26 2024
+                                                lxplus956.cern.ch       
+  
+ Text and data files:
+  1  text             mp2con-withIFT_ss.txt
+  2  text             3STpresigma_ss_v3.txt
+  3  text             IFTpresigma_ss_v3.txt
+  4  C_binary         mp2input.bin
+  
+ LOOP1: starting
+ LOOP1:         348  labels from txt data stored
+ LOOP1: reading data files
+ LOOP1:         348  is total number NTGB of labels/parameters
+ LOOP1:         280  is number of pre-sigmas
+ LOOP1:         284  is number NVGB of variable parameters
+ LOOP1:         300  is total number NTPGRP of label/parameter groups
+  
+     NREC =    513656 = number of records
+  MREQENF =        25 = required number of entries (eqns in binary files)
+  MREQENA =        10 = required number of entries (from accepted fits)
+ LOOP1: ending
+  
+  
+ LOOP2: starting
+ LOOP2: start event reading
+ LOOP2: event reading ended - end of data
+  
+     NTGB =       348 = total number of parameters
+                      (all parameters, appearing in binary files)
+     NVGB =       284 = number of variable parameters
+                      (appearing in fit matrix/vectors)
+     NAGB =       284 = number of all parameters
+                      (including Lagrange multiplier or reduced)
+   NTPGRP =       300 = total number of parameter groups
+   NVPGRP =       254 = number of variable parameter groups
+     NFGB =       260 = number of fit parameters
+     NOFF =     40186 = max number of off-diagonal elements
+     NCGB =        24 = number of constraints
+    NAGBN =        79 = max number of global parameters in an event
+    NALCN =         5 = max number of local parameters in an event
+    NAEQN =        33 = max number of equations in an event
+    NRECE =         5 = number of records without variable parameters
+   NCACHE =  25000000 = number of words for caching
+                      cache splitting   10.4 %   1.5 %  88.1 %
+  
+  
+ Solution method and matrix-storage mode:
+      METSOL = 1:  matrix inversion
+                   with           3  iterations
+      MATSTO = 1:  full symmetric matrix, (n*n+n)/2 elements
+ Convergence assumed, if expected dF <  0.1000E-02
+ Constraints handled by elimination
+ Rank of product matrix of constraints is          24  for          24  constraint equations
+  
+    Cut values of Chi^2/Ndf and Chi2,
+    corresponding to 2 and 3 standard deviations
+    Ndf  Chi^2/Ndf(2)  Chi^2(2)     Chi^2/Ndf(3)  Chi^2(3)
+     1       4.000         4.0          9.000         9.0
+     2       3.090         6.2          5.915        11.8
+     3       2.675         8.0          4.718        14.2
+     4       2.429         9.7          4.063        16.3
+     5       2.263        11.3          3.641        18.2
+     6       2.141        12.8          3.344        20.1
+     7       2.048        14.3          3.121        21.8
+     8       1.974        15.8          2.947        23.6
+     9       1.912        17.2          2.806        25.3
+    10       1.861        18.6          2.690        26.9
+    12       1.779        21.3          2.508        30.1
+    14       1.716        24.0          2.371        33.2
+    16       1.666        26.7          2.263        36.2
+    18       1.625        29.2          2.176        39.2
+    20       1.590        31.8          2.104        42.1
+    25       1.523        38.1          1.967        49.2
+    30       1.474        44.2          1.868        56.0
+    35       1.428        50.0          1.757        61.5
+ LOOP2: ending
+  
+  
+ Solution algorithm: 
+ ========================================
+                         solution method:   matrix inversion
+            convergence limit at Delta F=   0.10E-02
+            maximum number of iterations=   3
+                   pre-sigmas defined for    98.6 % of variable parameters
+                       default pre-sigma=   0.00E+00
+                          regularization:   no
+ Checking feasibility of parameters:
+    parameters are feasible  (i.e. satisfy constraints)
+ No rank defect of the symmetric matrix
+  
+ it fc   fcn_value dfcn_exp  slpr costh  iit st ls  step cutf rejects hhmmss FMS
+ -- -- ----------- --------  ---- -----  --- -- -- ----- ---- ------- ------ ---
+  0  1 0.56597E+07                                        0.0   24401  00022 FMS
+  
+ PTLINE: line-search method based on slopes with sufficient slope-decrease
+ PTLDEF: slope ratio limit=  0.50000000000000000     
+ PTLDEF: maximum step =   10.000000000000000     
+ PTLDEF:           1  <= nr of calls <=          10
+  i      x              F(x)         F'(X)          minimum     F'(X)
+  0    0.000000       0.00000      -252342.        0.000000     ratio
+  1    1.000000 L*   -126172.      -3.46510        1.000014     0.000
+ PTLINE: INFO=1  convergence reached
+  
+  1  2 0.54073E+07 0.25E+06 0.000 0.016    0  0  1 1.000  0.0   24401  00008 F  
+                                                                       00000   S
+  2  3 0.54073E+07 0.70E-01 0.032 0.000    0  0 -1 1.000  0.0   24401  00008 F  
+  
+ PTLINE: line-search method based on slopes with sufficient slope-decrease
+ PTLDEF: slope ratio limit=  0.50000000000000000     
+ PTLDEF: maximum step =   10.000000000000000     
+ PTLDEF:           3  <= nr of calls <=          10
+  i      x              F(x)         F'(X)          minimum     F'(X)
+  0    0.000000       0.00000     -0.704815E-01    0.000000     ratio
+  1    1.000000 L   -0.369870E-01 -0.225666E-02    1.033077     0.032
+  2    1.033077 *R  -0.370447E-01  0.293655E-09    1.033077     0.000
+ PTLINE: INFO=1  convergence reached
+  
+     4 0.54073E+07          0.000                1 1.033        24401  00008 F  
+                                                                       00000   S
+  3  5 0.54073E+07 0.26E-04 0.016 0.000    0  0 -1 1.000  0.0   24401  00008 F  
+  
+ PTLINE: line-search method based on slopes with sufficient slope-decrease
+ PTLDEF: slope ratio limit=  0.50000000000000000     
+ PTLDEF: maximum step =   10.000000000000000     
+ PTLDEF:           3  <= nr of calls <=          10
+  i      x              F(x)         F'(X)          minimum     F'(X)
+  0    0.000000       0.00000     -0.261222E-04    0.000000     ratio
+  1    1.000000     -0.299206E-04 -0.404938E-06    1.015746     0.016
+  2    1.015746 L*  -0.302126E-04 -0.274006E-10    1.015747     0.000
+ PTLINE: INFO=1  convergence reached
+  
+     6 0.54073E+07          0.000                1 1.016        24401  00008 F  
+  
+ Sum(Chi^2)/Sum(Ndf) =   5407341.1842365442     
+                     / (     6422883 -         260 )
+                     =  0.84192100084911481     
+  
+ Record          34  is first with error (rank deficit/NaN)
+  
+ In total 2 +           6  loops through the data files
+ Times [in sec] for     text processing       0.015
+                                  LOOP1       4.241
+                                  LOOP2       3.178
+   func. value                                7.606 *  5.
+   func. value, global matrix, solution      22.452 *  1.
+                           new solution       0.000 *  2.
+
+ Total time =          68  seconds =           0  h           1  m           8  seconds
+ end                                            Sun Jun 30 19:11:36 2024
+  
+      Peak dynamic memory allocation:    0.100673 GB
+  
+ Data rejected in last iteration:   
+           23108  (rank deficit/NaN)         1293  (Ndf=0)              0  (huge)              0  (large)
+  
+  
+             Explanation of iteration table
+             ==============================
+       it =  iteration number. Global parameters are improved for it > 0.
+             First function evaluation is called iteraton 0.
+       fc =  number of function evaluations.
+fcn_value =  value of 2 x Likelihood function (LF).
+             The final value is the chi^2 value of the fit and should
+             be about equal to the NDF (see below).
+ dfcn_exp =  expected reduction of the value of the Likelihood function (LF)
+     slpr =  ratio of the actual slope to inital slope.
+    costh =  cosine of angle between search direction and -gradient
+       ls =  line search info
+             < 0    recalculate function
+             = 0:   N or STP lt 0 or step not descending
+             = 1:   Linesearch convergence conditions reached
+             = 2:   interval of uncertainty at lower limit
+             = 3:   max nr of line search calls reached
+             = 4:   step at the lower bound
+             = 5:   step at the upper bound
+             = 6:   rounding error limitation
+     step =  the factor for the Newton step during the line search. Usually
+             a value of 1 gives a sufficient reduction of the LF. Oherwise
+             other step values are tried.
+     cutf =  cut factor. Local fits are rejected, if their chi^2 value
+             is larger than the 3-sigma chi^2 value times the cut factor.
+             A cut factor of 1 is used finally, but initially a larger
+             factor may be used. A value of 0.0 means no cut.
+  rejects =  total number of rejected local fits.
+   hmmsec =  the time in hours (h), minutes (mm) and seconds.
+      FMS =  calculation of Function value, Matrix, Solution.
+  

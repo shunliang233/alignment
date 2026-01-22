@@ -1,0 +1,26 @@
+Scripts for running Millepede-II and reconversion.
+You can set this directory anywhere
+
+Assume that
+- run CKF2GlobalAlignment with cluster and side by side
+- convert2mille_v2_ss.C was processed.
+
+(1.conversion)
+
+2.First pede
+3st
+mp2str-noIFT-2layersfixed_v2_ss.txt
+4st
+mp2str-withIFT-2layersfixed_v2_ss.txt
+
+3.Prepare for Second pede
+makeFixAnotherLayers.sh
+
+4.Second pede
+3st
+mp2str-noIFT-anotherlayersfixed_v2_ss.txt
+4st
+mp2str-withIFT-anotherlayersfixed_v2_ss.txt
+
+5.Reconcersion
+reconversion_ss.sh

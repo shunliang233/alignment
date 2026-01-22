@@ -1,0 +1,47 @@
+*       *** 3 middle layers fixed steering file ***
+ 
+*            Additinal files
+fortranfiles ! following bin files are fortran
+mp2con-noIFT_another_ss.txt   ! constraints text file: change if change constraint 
+3STpresigma_another_ss.txt
+Fixanotherlayers.txt
+
+Cfiles       ! following bin files are Cfiles
+mp2input.bin   ! binary data file: you may have to change
+ 
+*            Selection of variable global parameters
+*entries  10 ! lower   limit on number of entries/parameter
+*entries  25 ! default limit on number of entries/parameter
+*entries  50 ! higher  limit on number of entries/parameter
+ 
+*            Initial parameter values, presigmas
+Parameter        ! define parameter attributes (start  of list)
+211     0       -1.  ! fix parameter at value
+411     0       -1.  ! fix parameter at value
+ 
+*            Handling of outliers, tails etc
+hugecut 2000.0            !cut factor in iteration 0
+*chisqcut 100.0 100.0 100.0 100.0 100.0 100.0 100.0 100.0       ! cut factor in iterations 1 and 2
+*outlierdownweighting  8 ! number of internal iterations (> 1)
+*dwfractioncut      0.2  ! 0 < value < 0.5
+*presigma           0.01 ! default value for presigma
+*regularisation 1.0      ! regularisation factor
+*regularisation 1.0 0.01 ! regularisation factor, pre-sigma
+ 
+*            Solution methods
+method fullMINRES       3 0.01 ! (approximate) MINRES, full storage
+method sparseMINRES     3 0.01 ! (approximate) MINRES, sparse storage
+*mrestol      1.0D-8           ! epsilon for MINRES convergence
+*bandwidth 0                   ! width of MINRES precond. band matrix
+method diagonalization 3 0.001 ! diagonalization (-> millepede.eve)
+method decomposition   3 0.001 ! Cholesky decomposition
+method inversion       3 0.001 ! Gauss matrix inversion
+* last method is applied
+ 
+*            Additional output. monitoring
+printcounts           ! print number of entries
+monitorresiduals     ! poor man's DMR (-> millepede.mon)
+*printrecord   1  2   ! debug printout for records
+*printrecord  -1 -1   ! debug printout for bad data records
+ 
+end ! optional for end-of-data
