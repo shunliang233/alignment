@@ -12,7 +12,7 @@
 #include <TFile.h>
 #include <TTree.h>
 
-// submodule
+// argparse
 #include <argparse/argparse.hpp>
 
 // local
@@ -228,9 +228,11 @@ int main(int argc, char *argv[])
         glo_der.clear();
         loc_der.clear();
 
-        // 
+        // Discard hits with measured_x - fitted_x too large
         if (fabs(m_fitParam_align_local_residual_x->at(ihit)) > 0.05)
           continue;
+
+        // Don't understand this value. All the derivations are larger than -9000
         if (m_fitParam_align_local_derivation_x_x->at(ihit) < -9000 || m_fitParam_align_local_derivation_x_rz->at(ihit) < -9000 || m_fitParam_align_global_derivation_y_x->at(ihit) < -9000 || m_fitParam_align_global_derivation_y_y->at(ihit) < -9000 || m_fitParam_align_global_derivation_y_z->at(ihit) < -9000 || m_fitParam_align_global_derivation_y_rx->at(ihit) < -9000 || m_fitParam_align_global_derivation_y_ry->at(ihit) < -9000 || m_fitParam_align_global_derivation_y_rz->at(ihit) < -9000)
           continue;
 

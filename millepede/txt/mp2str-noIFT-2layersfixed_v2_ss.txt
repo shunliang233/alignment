@@ -47,6 +47,7 @@ Parameter        ! define parameter attributes (start  of list)
 21601     0       -1.  ! fix parameter at value
 21602     0       -1.  ! fix parameter at value
 21701     0       -1.  ! fix parameter at value
+21702     0       -1.  ! fix parameter at value
 41001     0       -1.  ! fix parameter at value
 41002     0       -1.  ! fix parameter at value
 41101     0       -1.  ! fix parameter at value
@@ -62,6 +63,7 @@ Parameter        ! define parameter attributes (start  of list)
 41601     0       -1.  ! fix parameter at value
 41602     0       -1.  ! fix parameter at value
 41701     0       -1.  ! fix parameter at value
+41702     0       -1.  ! fix parameter at value
 21011     0       -1.  ! fix parameter at value
 21111     0       -1.  ! fix parameter at value
 21211     0       -1.  ! fix parameter at value
@@ -69,6 +71,7 @@ Parameter        ! define parameter attributes (start  of list)
 21411     0       -1.  ! fix parameter at value
 21511     0       -1.  ! fix parameter at value
 21611     0       -1.  ! fix parameter at value
+21711     0       -1.  ! fix parameter at value
 41011     0       -1.  ! fix parameter at value
 41111     0       -1.  ! fix parameter at value
 41211     0       -1.  ! fix parameter at value
@@ -76,6 +79,7 @@ Parameter        ! define parameter attributes (start  of list)
 41411     0       -1.  ! fix parameter at value
 41511     0       -1.  ! fix parameter at value
 41611     0       -1.  ! fix parameter at value
+41711     0       -1.  ! fix parameter at value
  
 *            Handling of outliers, tails etc
 hugecut 2000.0            !cut factor in iteration 0

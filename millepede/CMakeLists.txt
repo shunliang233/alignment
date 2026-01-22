@@ -33,10 +33,10 @@ if(NOT CMAKE_BUILD_TYPE)
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo MinSizeRel)
 endif()
 
-# Find ROOT - Auto include path by components
+# Find ROOT
 find_package(ROOT REQUIRED COMPONENTS Core RIO Tree)
 
-# Add argparse subdirectory
+# Find argparse
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/argparse/CMakeLists.txt")
     # 禁用 argparse 的测试和示例
     set(ARGPARSE_BUILD_TESTS OFF CACHE BOOL "Disable argparse tests")
@@ -51,9 +51,11 @@ else()
     )
 endif()
 
+# 全局包含 include 目录
+include_directories(${CMAKE_SOURCE_DIR}/include)
+
 # Executable 1root2bin
 add_executable(1convert src/main.cpp src/Mille.cpp)
-target_include_directories(1convert PRIVATE include)
 target_link_libraries(1convert PRIVATE 
     ROOT::Core 
     ROOT::RIO 
