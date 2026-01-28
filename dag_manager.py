@@ -11,24 +11,17 @@ import shutil
 from pathlib import Path
 from typing import List, Optional
 from RawList import RawList
-from config import AlignmentConfig
+from Config import Config
 import ColorfulPrint
 
-# Test: python3 dag_manager.py -y 2025 -r 020633 -f 101-142 -i 10 --submit
+# Test: python3 dag_manager.py --submit
 
-# TODO: extract paths from self.config, rather than from arguments
 # TODO: 运行前检查 config.json 中的路径是否存在，以及各种语法合理性
 # TODO: 支持断点执行
 class DAGManager:
     """Manages HTCondor DAG generation for alignment workflow."""
     
-    # Default HTCondor requirements
-    DEFAULT_REQUIREMENTS = "(Machine =!= LastRemoteHost) && (OpSysAndVer =?= \"AlmaLinux9\")"
-    
-    # Directory name for log files
-    LOGS_DIR = "logs"
-    
-    def __init__(self, config: AlignmentConfig):
+    def __init__(self, config: Config):
         """
         Initialize DAG manager.
         
@@ -588,7 +581,7 @@ def main():
     
     # Load configuration
     try:
-        config = AlignmentConfig(args.config)
+        config = Config(Path(args.config))
     except FileNotFoundError as e:
         print(f"Error: {e}")
         print("Run 'python config.py' to create a default configuration file.")
