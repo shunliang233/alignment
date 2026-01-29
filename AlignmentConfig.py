@@ -8,7 +8,6 @@ type checking for alignment workflow parameters.
 """
 
 from pathlib import Path
-from typing import Any
 
 from Config import Config
 from RawList import RawList
@@ -30,21 +29,6 @@ class AlignmentConfig(Config):
             ValueError: If configuration values are invalid
         """
         super().__init__(config_file)
-        self._validate_paths()
-    
-    def _validate_paths(self) -> None:
-        """Validate paths exist at initialization. (Fail Fast)"""
-        _ = self.src_dir
-        _ = self.tpl_dir
-        _ = self.tpl_inputforalign
-        _ = self.tpl_recosub
-        _ = self.tpl_recoexe
-        _ = self.tpl_millesub
-        _ = self.tpl_milleexe
-        _ = self.env_calypso_asetup
-        _ = self.env_calypso_setup
-        _ = self.env_pede
-        _ = self.env_root
     
     # =============================== Raw info ===============================
     
@@ -67,13 +51,7 @@ class AlignmentConfig(Config):
         return RawList(files)
     
     @property
-    def iters_str(self) -> str:
-        """Get iterations string from configuration (2 digits)."""
-        iters = self._get_int(self.raw.iters)
-        return str(iters).zfill(2)
-    
-    @property
-    def iters_int(self) -> int:
+    def iters(self) -> int:
         """Get iterations integer from configuration."""
         iters = self._get_int(self.raw.iters)
         return int(iters)
@@ -89,7 +67,7 @@ class AlignmentConfig(Config):
     @property
     def format(self) -> str:
         """Get formatted string from configuration."""
-        return self._format_str(self.raw.format,
+        return self._get_str(self.raw.format,
                                year=self.year,
                                run=self.run,
                                files=self.files,
@@ -107,7 +85,7 @@ class AlignmentConfig(Config):
     @property
     def dag_dir(self) -> Path:
         """Get directory for DAG files."""
-        return self._get_path(self.dag.dir, format=self.format)
+        return self._get_path(self.dag.dir, ensure=True, format=self.format)
     
     @property
     def dag_file(self) -> Path:
@@ -127,12 +105,12 @@ class AlignmentConfig(Config):
     def dag_iter_dir(self, iteration: int) -> Path:
         """Get directory for a specific iteration in the DAG."""
         iter_str = f"{iteration:02d}"
-        return self._get_joint_path(self.dag_dir, self.dag.iter.dir, iter=iter_str)
+        return self._get_joint_path(self.dag_dir, self.dag.iter.dir, ensure=True, iter=iter_str)
     
     def dag_recojob(self, iteration: int, file_str: str) -> str:
         """Get job name for reconstruction."""
         iter_str = f"{iteration:02d}"
-        return self._format_str(self.dag.iter.recojob, iter=iter_str, file=file_str)
+        return self._get_str(self.dag.iter.recojob, iter=iter_str, file=file_str)
     
     def dag_recosub(self, iteration: int, file_str: str) -> Path:
         """Get path for reconstruction submit file."""
@@ -142,7 +120,7 @@ class AlignmentConfig(Config):
     def dag_millejob(self, iteration: int) -> str:
         """Get job name for millepede."""
         iter_str = f"{iteration:02d}"
-        return self._format_str(self.dag.iter.millejob, iter=iter_str)
+        return self._get_str(self.dag.iter.millejob, iter=iter_str)
     
     def dag_millesub(self, iteration: int) -> Path:
         """Get path for millepede submit file."""
@@ -152,7 +130,7 @@ class AlignmentConfig(Config):
     def logs_dir(self, iteration: int) -> Path:
         """Get logs directory for a specific iteration."""
         iter_str = f"{iteration:02d}"
-        return self._get_joint_path(self.dag_iter_dir(iteration), self.dag.iter.logs.dir, iter=iter_str)
+        return self._get_joint_path(self.dag_iter_dir(iteration), self.dag.iter.logs.dir, ensure=True, iter=iter_str)
     
     def logs_reco_err(self, iteration: int, file_str: str) -> Path:
         """Get path for reconstruction error log file."""
@@ -189,24 +167,29 @@ class AlignmentConfig(Config):
     @property
     def data_dir(self) -> Path:
         """Get data directory path."""
-        return self._get_path(self.data.dir, format=self.format)
+        return self._get_path(self.data.dir, ensure=True, format=self.format)
+    
+    @property
+    def data_initial(self) -> Path:
+        """Get initial inputforalign data file path."""
+        return self._get_joint_path(self.reco_dir(0), self.data.initial)
     
     def data_iter_dir(self, iteration: int) -> Path:
         """Get iteration directory path."""
         iter_str = f"{iteration:02d}"
-        return self._get_joint_path(self.data_dir, self.data.iter.dir, iter=iter_str)
+        return self._get_joint_path(self.data_dir, self.data.iter.dir, ensure=True, iter=iter_str)
     
     def reco_dir(self, iteration: int) -> Path:
         """Get reconstruction directory path for an iteration."""
-        return self._get_joint_path(self.data_iter_dir(iteration), self.data.iter.reco)
+        return self._get_joint_path(self.data_iter_dir(iteration), self.data.iter.reco, ensure=True)
     
     def kfalign_dir(self, iteration: int) -> Path:
         """Get KF alignment directory path for an iteration."""
-        return self._get_joint_path(self.data_iter_dir(iteration), self.data.iter.kfalign)
+        return self._get_joint_path(self.data_iter_dir(iteration), self.data.iter.kfalign, ensure=True)
     
     def millepede_dir(self, iteration: int) -> Path:
         """Get Millepede directory path for an iteration."""
-        return self._get_joint_path(self.data_iter_dir(iteration), self.data.iter.millepede)
+        return self._get_joint_path(self.data_iter_dir(iteration), self.data.iter.millepede, ensure=True)
     
     # ============================= Template info =============================
     

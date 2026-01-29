@@ -1,9 +1,9 @@
 {
   "raw": {
-    "year": 2023,
-    "run": 11705,
-    "files": "401-431",
-    "iters": 5,
+    "year": 2022,
+    "run": 20633,
+    "files": "101-151",
+    "iters": 15,
     "stations": 4,
     "format": "Y{year}_R{run}_F{files}_ST{stations}"
   },
@@ -31,6 +31,7 @@
   },
   "data": {
     "dir": "/eos/home-s/shunlian/Alignment/data/{format}",
+    "initial": "inputforalign.txt",
     "iter": {
       "dir": "iter{iter}",
       "reco": "1reco",

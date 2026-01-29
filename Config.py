@@ -133,81 +133,77 @@ class Config:
             )
         return config.value
     
-    def _get_str(self, config: Union[ConfigValue, ConfigNode]) -> str:
-        return self._ensure_type(config, (str,))
-    
     def _get_int(self, config: Union[ConfigValue, ConfigNode]) -> int:
         return self._ensure_type(config, (int,))
     
-    def _format_str(self, config: Union[ConfigValue, ConfigNode], **kwargs) -> str:
+    def _get_str(self, config: Union[ConfigValue, ConfigNode], **kwargs) -> str:
         """
-        Get a string value and format it with provided arguments.
+        Get a string value with optional formatting.
         
         Args:
             config: ConfigValue or ConfigNode wrapper
-            **kwargs: Format arguments
+            **kwargs: Optional format arguments
             
         Returns:
-            Formatted string
+            String value (formatted if kwargs provided)
         """
-        string_value = self._get_str(config)  # Already rejects ConfigNode
-        try:
-            return string_value.format(**kwargs)
-        except KeyError as e:
-            raise ValueError(
-                f"{config.keys}: missing key {e} in string: {string_value}")
+        string_value = self._ensure_type(config, (str,))
+        
+        # Format if arguments provided
+        if kwargs:
+            try:
+                return string_value.format(**kwargs)
+            except KeyError as e:
+                raise ValueError(
+                    f"{config.keys}: missing key {e} in string: {string_value}")
+        
+        return string_value
     
     def _get_path(self, config: Union[ConfigValue, ConfigNode],
-                  exist: bool = False, **kwargs) -> Path:
+                  base_path: Optional[Path] = None,
+                  exist: bool = False, ensure: bool = False, **kwargs) -> Path:
         """
         Get a path value with optional formatting and existence validation.
         
         Args:
             config: ConfigValue or ConfigNode wrapper
-            exist: Whether the path must exist
+            base_path: Optional base directory to join with relative path from config
+            exist: Whether the path must exist (raises error if not, ignores ensure)
+            ensure: Whether to ensure path exists (creates if not, only when exist=False)
             **kwargs: Format arguments (if provided, string will be formatted)
             
         Returns:
             Path object
             
-        Warnings:
-            Existence check is performed, so only for absolute paths.
+        Note:
+            - base_path=None: Use path from config directly
+            - base_path provided: Join base_path with relative path from config
+            - exist=True: Path must exist, raises error if not (for templates, scripts)
+            - exist=False, ensure=True: Ensure path exists, create if not (for data dirs)
+            - exist=False, ensure=False: Path may not exist, no action taken (default)
         """
-        # If format arguments provided, format the string first
-        if kwargs:
-            string_value = self._format_str(config, **kwargs)
-        else:
-            string_value = self._get_str(config)
+        # Get string value (formatted if kwargs provided)
+        string_value = self._get_str(config, **kwargs)
         
-        path = Path(string_value)
-        if exist and not path.exists():
-            raise FileNotFoundError(
-                f"{config.keys}: path does not exist: {path}")
+        # Build path: join with base_path if provided, otherwise use directly
+        if base_path is not None:
+            path = base_path / string_value
+        else:
+            path = Path(string_value)
+        
+        # Validation mode: path must exist
+        if exist:
+            if not path.exists():
+                raise FileNotFoundError(
+                    f"{config.keys}: path does not exist: {path}")
+        # Creation mode: ensure path exists if requested
+        elif ensure:
+            path.mkdir(parents=True, exist_ok=True)
+        
         return path
     
+    # TODO: Deprecate in favor of _get_path with base_path param
     def _get_joint_path(self, base_path: Path, config: Union[ConfigValue, ConfigNode],
-                        exist: bool = False, **kwargs) -> Path:
-        """
-        Get a path by joining a base directory with a relative path from config.
-        
-        Args:
-            base_path: Base directory path
-            config: ConfigValue or ConfigNode wrapper containing relative path
-            exist: Whether the resulting path must exist
-            **kwargs: Format arguments (if provided, string will be formatted)
-            
-        Returns:
-            Joined Path object
-        """
-        # Get relative path from config
-        if kwargs:
-            relative = self._format_str(config, **kwargs)
-        else:
-            relative = self._get_str(config)
-        
-        # Join with base path
-        path = base_path / relative
-        if exist and not path.exists():
-            raise FileNotFoundError(
-                f"{config.keys}: path does not exist: {path}")
-        return path
+                        exist: bool = False, ensure: bool = False, **kwargs) -> Path:
+        return self._get_path(config, base_path=base_path, exist=exist, ensure=ensure, **kwargs)
+
