@@ -9,7 +9,6 @@ replacing the daemon-based approach with a more robust DAGman-based solution.
 import argparse
 import shutil
 from pathlib import Path
-from typing import List, Optional
 
 from AlignmentConfig import AlignmentConfig
 import ColorfulPrint

@@ -6,72 +6,84 @@ This module handles loading of configuration from JSON files.
 """
 
 import json
+import shutil
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 class ConfigNode:
-    """Branch: A dict node in the configuration tree."""
-    def __init__(self, data: dict[str, Any], path: str = ""):
-        if not isinstance(data, dict):
-            raise TypeError(f"ConfigNode expects a dict, got {type(data).__name__}")
+    """
+    A node in the configuration tree.
+
+    Represents both branches (dict) and leaves (scalar values):
+    - Branch: attribute access returns child ConfigNodes
+    - Leaf:   .value returns the scalar; attribute access raises an error
+    """
+
+    def __init__(self, data: Any, path: str = ""):
         self._data = data
         self._path = path
 
-    def __getattr__(self, key: str):
-        if key.startswith('_'):
-            raise AttributeError(f"Illegal attribute: {key} start with '_'.")
-        if key in self._data:
-            value = self._data[key]
-            new_path = f"{self._path}.{key}" if self._path else key
-            if isinstance(value, dict):
-                return ConfigNode(value, new_path)
-            else:
-                return ConfigValue(value, new_path)
-        raise AttributeError(f"No such config key: {key}")
+    # ---- type queries ----
+    @property
+    def _is_leaf(self) -> bool:
+        """True if this node holds a scalar value (not a dict)."""
+        return not isinstance(self._data, dict)
+    @property
+    def _is_branch(self) -> bool:
+        """True if this node holds a dict (has children)."""
+        return isinstance(self._data, dict)
 
-
-class ConfigValue:
-    """Leaf: Wrapper for config values that carries keys information."""
-    def __init__(self, value: Any, keys: str):
-        self._value = value
-        self._keys = keys
-    
-    """Public Properties"""
+    # ---- value access ----
     @property
     def value(self) -> Any:
-        """Get the wrapped value."""
-        return self._value
-    @property
-    def keys(self) -> str:
-        """Get the configuration keys."""
-        return self._keys
-    
-    """Transparent Proxy"""
+        """Return the scalar value. Raises TypeError if is a branch node."""
+        if self._is_branch:
+            raise TypeError(f"'{self._path}' is a branch node.")
+        return self._data
+
+    # ---- child access ----
+    def __getattr__(self, key: str):
+        if key.startswith('_'):
+            raise AttributeError(f"Illegal '{key}' starts with '_'.")
+        if self._is_leaf:
+            raise AttributeError(
+                f"'{self._path}' is a leaf node (value={self._data!r}), "
+                f"cannot access attribute '{key}'")
+        if key in self._data:
+            child_path = f"{self._path}.{key}" if self._path else key
+            return ConfigNode(self._data[key], child_path)
+        raise AttributeError(f"No such config key: '{self._path}.{key}'")
+
+    # ---- transparent proxy (useful for leaf nodes) ----
     def __repr__(self):
-        return repr(self._value)
+        return repr(self._data)
     def __str__(self):
-        return str(self._value)
+        return str(self._data)
     def __int__(self):
-        return int(self._value)
+        return int(self._data)
     def __bool__(self):
-        return bool(self._value)
+        return bool(self._data)
     def __eq__(self, other):
-        if isinstance(other, ConfigValue):
-            return self._value == other._value
-        return self._value == other
+        if isinstance(other, ConfigNode):
+            return self._data == other._data
+        return self._data == other
 
 class Config:
     """Basic config manager from JSON file."""
     
-    def __init__(self, config_file: Path):
+    def __init__(self, config_file: Path, copy_path: Optional[Path] = None):
         """
         Initialize configuration.
         
         Args:
             config_file: Path to JSON configuration file.
+            copy_path: Path to copy the configuration file to (for archive).
         """
         self._config_file: Path = config_file
         self._config: dict[str, Any] = self._load_config()
+        if copy_path is not None:
+            copy_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(config_file, copy_path)
         
     def _load_config(self) -> dict[str, Any]:
         """Load configuration from JSON file."""
@@ -85,81 +97,66 @@ class Config:
         except json.JSONDecodeError as e:
             raise ValueError(f"Invalid JSON in configuration file: {e}")
     
-    def __getattr__(self, key: str):
-        """Allow attribute-style access to config keys"""
+    def __getattr__(self, key: str) -> ConfigNode:
+        """Allow attribute-style access to config keys."""
         if key.startswith('_'):
-            raise AttributeError(f"Illegal attribute: {key} start with '_'.")
+            raise AttributeError(f"Illegal '{key}' starts with '_'.")
         if key in self._config:
-            value = self._config[key]
-            if isinstance(value, dict):
-                return ConfigNode(value, key)
-            else:
-                return ConfigValue(value, key)
+            return ConfigNode(self._config[key], key)
         raise AttributeError(f"No such config key: {key}")
     
     # ==================== Helper methods ====================
     
-    # Liberal Accept, Strict Validate
-    def _ensure_type(self, config: Union[ConfigValue, ConfigNode],
+    def _ensure_type(self, config: ConfigNode,
                      expected_types: tuple) -> Any:
         """
         Ensure and return value of expected type(s).
-        
+
         Args:
-            config: Must be ConfigValue (leaf node).
-            expected_types: Tuple of expected types
-            
+            config: A leaf ConfigNode (branch nodes are rejected at runtime).
+            expected_types: Tuple of accepted types.
+
         Returns:
-            The unwrapped value if type is correct
-            
+            The unwrapped scalar value.
+
         Raises:
-            TypeError: If value is ConfigNode or if value type isn't expected
-            
-        Note:
-            Type hint accepts Union[ConfigValue, ConfigNode] because static type 
-            checkers cannot determine whether config.x.y is a leaf or branch at 
-            compile time. Runtime validation ensures only ConfigValue is processed.
+            TypeError: If config is a branch node, or value type doesn't match.
         """
-        # Runtime guard: can't deal with ConfigNode
-        if isinstance(config, ConfigNode):
+        val = config.value  # raises TypeError automatically if config is a branch
+        if not isinstance(val, expected_types):
             raise TypeError(
-                f"{config._path} is a ConfigNode (dict)."
-            )
-        
-        if not isinstance(config.value, expected_types):
-            raise TypeError(
-                f"{config.keys} type: {type(config.value).__name__} not valid.\n"
+                f"{config.path} type: {type(val).__name__} not valid.\n"
                 f"Expected: {', '.join(t.__name__ for t in expected_types)}"
             )
-        return config.value
+        return val
     
-    def _get_int(self, config: Union[ConfigValue, ConfigNode]) -> int:
+    def _get_int(self, config: ConfigNode) -> int:
         return self._ensure_type(config, (int,))
     
-    def _get_str(self, config: Union[ConfigValue, ConfigNode], **kwargs) -> str:
+    def _get_str(self, config: ConfigNode, **kwargs) -> str:
         """
         Get a string value with optional formatting.
-        
+
         Args:
-            config: ConfigValue or ConfigNode wrapper
-            **kwargs: Optional format arguments
-            
+            config: A leaf ConfigNode.
+            **kwargs: Optional format arguments.
+
         Returns:
-            String value (formatted if kwargs provided)
+            String value (formatted if kwargs provided).
         """
         string_value = self._ensure_type(config, (str,))
-        
+
         # Format if arguments provided
         if kwargs:
             try:
                 return string_value.format(**kwargs)
             except KeyError as e:
                 raise ValueError(
-                    f"{config.keys}: missing key {e} in string: {string_value}")
+                    f"{config.path}: missing key {e} in string: {string_value}")
         
         return string_value
     
-    def _get_path(self, config: Union[ConfigValue, ConfigNode],
+    def _get_path(self, config: ConfigNode,
                   base_path: Optional[Path] = None,
                   exist: bool = False, ensure: bool = False, **kwargs) -> Path:
         """
@@ -195,15 +192,12 @@ class Config:
         if exist:
             if not path.exists():
                 raise FileNotFoundError(
-                    f"{config.keys}: path does not exist: {path}")
+                    f"{config.path}: path does not exist: {path}")
         # Creation mode: ensure path exists if requested
         elif ensure:
             path.mkdir(parents=True, exist_ok=True)
         
         return path
     
-    # TODO: Deprecate in favor of _get_path with base_path param
-    def _get_joint_path(self, base_path: Path, config: Union[ConfigValue, ConfigNode],
-                        exist: bool = False, ensure: bool = False, **kwargs) -> Path:
-        return self._get_path(config, base_path=base_path, exist=exist, ensure=ensure, **kwargs)
+
 
