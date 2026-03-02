@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from Label import Label
-from PedeStep import FixRule
+from FixRule import FixRule
 
 
 @dataclass
@@ -34,7 +34,7 @@ class Parameter:
         )
 
 
-class ParamReader:
+class ParamIO:
     """
     Reader for Millepede-II parameters file.
 
@@ -56,12 +56,13 @@ class ParamReader:
             ValueError: If a data line cannot be parsed.
         """
         if not source.exists():
-            raise FileNotFoundError(f"Source mp2par file not found: {source}")
+            raise FileNotFoundError(f"Source file not found: {source}")
         self._source = source
         self._target = target
-        self._entries: list[Parameter] = self._parse(source)
+        self._parameters: list[Parameter] = self._parse(source)
 
     def _parse(self, source: Path) -> list[Parameter]:
+        """Parse parameters from the source file."""
         entries = []
         seen: dict[Label, int] = {}  # label: lineno
         in_entries = False
@@ -95,37 +96,36 @@ class ParamReader:
         return entries
 
     # -------------------------- Helper Methods -------------------------- #
-    # TODO: 这些是 Claude 写的，不确定有没有用
 
     @property
-    def entries(self) -> list[Parameter]:
-        """All parsed entries in file order."""
-        return self._entries
+    def parameters(self) -> list[Parameter]:
+        """All parsed parameters in file order."""
+        return self._parameters
 
     def __len__(self) -> int:
-        return len(self._entries)
+        return len(self._parameters)
 
     def __iter__(self):
-        return iter(self._entries)
+        return iter(self._parameters)
+    
+    def __contains__(self, label_int: int) -> bool:
+        return any(param.label == label_int for param in self._parameters)
 
     def __getitem__(self, label_int: int) -> Parameter:
         """
-        Look up an entry by integer label.
+        Look up a parameter by integer label.
 
         Raises:
             KeyError: If the label is not found.
         """
-        for entry in self._entries:
-            if entry.label == label_int:
-                return entry
+        for param in self._parameters:
+            if param.label == label_int:
+                return param
         raise KeyError(f"Label {label_int} not found in {self._source}")
-
-    def __contains__(self, label_int: int) -> bool:
-        return any(e.label == label_int for e in self._entries)
 
     def __setitem__(self, label_int: int, values: tuple[float, float]) -> None:
         """
-        Modify initial and/or presigma for a given label.
+        Modify initial and presigma for an existing label.
 
         Args:
             label_int: Integer label to update.
@@ -133,31 +133,27 @@ class ParamReader:
         Raises:
             KeyError: If the label is not found.
         """
-        entry = self[label_int]
-        entry.initial, entry.presigma = values
+        param = self[label_int]
+        param.initial, param.presigma = values
 
     # ---------------------------- Methods ---------------------------- #
 
     def fix(self, rule: FixRule) -> None:
         """
-        Set presigma = -1 (fix) for all entries matching the given rule.
+        Set presigma = -1.0 (fix) for all parameters matching the given rule.
 
         Args:
-            rule: FixRule specifying per-component depths to fix.
+            rule: FixRule specifying parameters to fix.
         """
-        for entry in self._entries:
-            for comp, depths in rule.rules.items():
-                if entry.label.depth in depths and entry.label in comp:
-                    entry.presigma = -1.0
-                    break
+        for param in self._parameters:
+            if param.label in rule:
+                param.presigma = -1.0
 
     def write(self) -> None:
-        """
-        Write all entries to the target parameters file.
-        """
+        """Write all entries to the target parameters file."""
         self._target.parent.mkdir(parents=True, exist_ok=True)
         with open(self._target, 'w') as f:
             f.write('* Label Initial Presigma\n')
             f.write('Parameter\n\n')
-            for entry in self._entries:
-                f.write(f'{entry}\n')
+            for param in self._parameters:
+                f.write(f'{param}\n')
