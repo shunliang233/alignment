@@ -7,6 +7,7 @@ This module handles loading of configuration from JSON files.
 
 import json
 import shutil
+from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Optional
 
@@ -68,23 +69,20 @@ class ConfigNode:
             return self._data == other._data
         return self._data == other
 
-class Config:
+class Config(ABC):
     """Basic config manager from JSON file."""
     
-    def __init__(self, config_file: Path, copy_path: Optional[Path] = None):
+    def __init__(self, config_file: Path):
         """
         Initialize configuration.
-        
+
         Args:
             config_file: Path to JSON configuration file.
-            copy_path: Path to copy the configuration file to (for archive).
         """
+        # NOTE: Never explicitly/implicitly invoke __getattr__ in __init__
         self._config_file: Path = config_file
         self._config: dict[str, Any] = self._load_config()
-        if copy_path is not None:
-            copy_path.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy(config_file, copy_path)
-        
+
     def _load_config(self) -> dict[str, Any]:
         """Load configuration from JSON file."""
         config_path = self._config_file
@@ -104,7 +102,21 @@ class Config:
         if key in self._config:
             return ConfigNode(self._config[key], key)
         raise AttributeError(f"No such config key: {key}")
-    
+
+    # ==================== Template Methods ====================
+
+    @property
+    @abstractmethod
+    def _archive_dest(self) -> Path:
+        """Destination path for archiving the config file."""
+        ...
+
+    def archive(self) -> None:
+        """Copy the config file to the archive destination."""
+        dest = self._archive_dest
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(self._config_file, dest)
+
     # ==================== Helper methods ====================
     
     def _ensure_type(self, config: ConfigNode,

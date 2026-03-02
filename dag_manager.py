@@ -29,6 +29,10 @@ class DAGManager:
         """
         self.config = config
     
+    def archive_config(self) -> None:
+        """Archive the config file to the data directory."""
+        self.config.archive()
+
     def validate_paths(self) -> None:
         """Validate necessary paths exist."""
         _ = self.config.src_dir
@@ -215,6 +219,7 @@ def main():
     
     # Create DAG
     dag_manager = DAGManager(config)
+    dag_manager.archive_config()
     dag_manager.validate_paths()
     dag_manager.create_data_dirs()
     dag_manager.create_dag_dirs()

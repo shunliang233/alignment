@@ -6,12 +6,12 @@ project(millepede
     LANGUAGES CXX
 )
 
-# Install prefix
+# Install directory
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}" CACHE PATH "Install prefix" FORCE)
-    message(STATUS "Using default install prefix: ${CMAKE_INSTALL_PREFIX}")
+    set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/bin" CACHE PATH "Install dir")
+    message(STATUS "Using default install dir: ${CMAKE_INSTALL_PREFIX}")
 else()
-    message(STATUS "Using custom install prefix: ${CMAKE_INSTALL_PREFIX}")
+    message(STATUS "Using custom install dir: ${CMAKE_INSTALL_PREFIX}")
 endif()
 
 # Export compile commands for IDE support
@@ -29,7 +29,7 @@ endif()
 
 # Set default Build Type to "Release" if not specified
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type")
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo MinSizeRel)
 endif()
 
@@ -65,13 +65,35 @@ target_link_libraries(1convert PRIVATE
 # Excutable 2pede
 
 # Excutable 3fixanotherlayers
-add_executable(3fixanotherlayers src/Fixfromstep1.cpp)
+add_executable(3.1fixanotherlayers src/Fixfromstep1.cpp)
 
 # Excutable 4pede2
+
+add_executable(3.2fix3STlayers src/Fixfromstep2.cpp)
 
 # Excutable 5reconvert
 add_executable(5.1PedetoDB_ss src/PedetoDB_ss.cpp)
 add_executable(5.2add_param src/add_param.cpp)
+
+#
+add_executable(develop_main src/develop_main.cpp src/Mille.cpp)
+target_link_libraries(develop_main PRIVATE 
+    ROOT::Core
+    ROOT::RIO
+    ROOT::Tree
+    argparse::argparse
+)
+
+# Tests (automatically enabled in Debug mode)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    enable_testing()
+    
+    add_executable(test_resparser test/test_resparser.cpp)
+    
+    add_test(NAME ResParserTest COMMAND test_resparser)
+    
+    message(STATUS "Tests enabled (Debug mode) - run with: make test_resparser && ctest")
+endif()
 
 # Configuration summary
 message(STATUS "=== Mille Converter Configuration ===")
@@ -84,7 +106,8 @@ message(STATUS "=====================================")
 # Installation: 安装所有可执行文件到 bin 目录
 install(TARGETS
     1convert
-    3fixanotherlayers
+    3.1fixanotherlayers
+    3.2fix3STlayers
     5.1PedetoDB_ss
     5.2add_param
     RUNTIME DESTINATION bin

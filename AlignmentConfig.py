@@ -8,32 +8,10 @@ type checking for alignment workflow parameters.
 """
 
 from pathlib import Path
-from typing import Union
 
 from Config import Config
 from RawList import RawList
 
-class PedeStep():
-    """One pede step in alignment workflow. Only layer by layer at present."""
-    
-    # Abbreviation Parser
-    abbreviation: dict[str, list[int]] = {
-        "IFT": [10, 11, 12],
-        "3ST": [20, 21, 22, 30, 31, 32, 40, 41, 42]
-    }
-    
-    def __init__(self, fix: list[Union[str, int]]):
-        self._fix: list[int] = []
-        for item in fix:
-            if isinstance(item, str):
-                if item in self.abbreviation:
-                    self._fix.extend(self.abbreviation[item])
-                else:
-                    raise ValueError(f"Unknown abbr to fix: {item}")
-            elif isinstance(item, int):
-                self._fix.append(item)
-            else:
-                raise TypeError(f"Unparseable fix item: {type(item).__name__}")
 
 # class IterSet():
 #     """Set of iteration identifiers."""
@@ -59,8 +37,13 @@ class AlignmentConfig(Config):
             TypeError: If configuration values have incorrect types
             ValueError: If configuration values are invalid
         """
-        super().__init__(config_file, self.data_config)
+        # NOTE: Never explicitly/implicitly invoke __getattr__ in __init__
+        super().__init__(config_file)
     
+    @property
+    def _archive_dest(self) -> Path:
+        return self.data_config
+
     # =============================== Raw info ===============================
     
     @property
