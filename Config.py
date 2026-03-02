@@ -113,6 +113,7 @@ class Config(ABC):
 
     def archive(self) -> None:
         """Copy the config file to the archive destination."""
+        # NOTE: mkdir is a defensive operation in case parent don't exist.
         dest = self._archive_dest
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(self._config_file, dest)
