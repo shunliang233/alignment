@@ -3,7 +3,7 @@
 *            Additinal files
 fortranfiles ! following bin files are fortran
 mp2con_ss.txt
-mp2pre_ss.txt
+mp2par_ss.txt
 
 Cfiles       ! following bin files are Cfiles
 mp2input.bin   ! binary data file: you may have to change

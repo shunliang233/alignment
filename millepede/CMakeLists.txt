@@ -75,25 +75,6 @@ add_executable(3.2fix3STlayers src/Fixfromstep2.cpp)
 add_executable(5.1PedetoDB_ss src/PedetoDB_ss.cpp)
 add_executable(5.2add_param src/add_param.cpp)
 
-#
-add_executable(develop_main src/develop_main.cpp src/Mille.cpp)
-target_link_libraries(develop_main PRIVATE 
-    ROOT::Core
-    ROOT::RIO
-    ROOT::Tree
-    argparse::argparse
-)
-
-# Tests (automatically enabled in Debug mode)
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    enable_testing()
-    
-    add_executable(test_resparser test/test_resparser.cpp)
-    
-    add_test(NAME ResParserTest COMMAND test_resparser)
-    
-    message(STATUS "Tests enabled (Debug mode) - run with: make test_resparser && ctest")
-endif()
 
 # Configuration summary
 message(STATUS "=== Mille Converter Configuration ===")
