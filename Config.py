@@ -170,14 +170,14 @@ class Config(ABC):
         return string_value
     
     def _get_path(self, config: ConfigNode,
-                  base_path: Optional[Path] = None,
+                  base: Optional[Path] = None,
                   exist: bool = False, ensure: bool = False, **kwargs) -> Path:
         """
         Get a path value with optional formatting and existence validation.
         
         Args:
             config: ConfigValue or ConfigNode wrapper
-            base_path: Optional base directory to join with relative path from config
+            base: Optional base directory to join with relative path from config
             exist: Whether the path must exist (raises error if not, ignores ensure)
             ensure: Whether to ensure path exists (creates if not, only when exist=False)
             **kwargs: Format arguments (if provided, string will be formatted)
@@ -186,8 +186,8 @@ class Config(ABC):
             Path object
             
         Note:
-            - base_path=None: Use path from config directly
-            - base_path provided: Join base_path with relative path from config
+            - base=None: Use path from config directly
+            - base provided: Join base with relative path from config
             - exist=True: Path must exist, raises error if not (for templates, scripts)
             - exist=False, ensure=True: Ensure path exists, create if not (for data dirs)
             - exist=False, ensure=False: Path may not exist, no action taken (default)
@@ -195,9 +195,9 @@ class Config(ABC):
         # Get string value (formatted if kwargs provided)
         string_value = self._get_str(config, **kwargs)
         
-        # Build path: join with base_path if provided, otherwise use directly
-        if base_path is not None:
-            path = base_path / string_value
+        # Build path: join with base if provided, otherwise use directly
+        if base is not None:
+            path = base / string_value
         else:
             path = Path(string_value)
         

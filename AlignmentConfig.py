@@ -79,6 +79,11 @@ class AlignmentConfig(Config):
         return stations
     
     @property
+    def initial(self) -> Path:
+        """Get initial parameters file path from configuration."""
+        return self._get_path(self.raw.initial, exist=True)
+    
+    @property
     def format(self) -> str:
         """Get formatted string from configuration."""
         return self._get_str(self.raw.format,
@@ -107,23 +112,23 @@ class AlignmentConfig(Config):
     @property
     def dag_file(self) -> Path:
         """Get path for DAG file."""
-        return self._get_path(self.dag.file, base_path=self.dag_dir)
+        return self._get_path(self.dag.file, base=self.dag_dir)
     
     @property
     def dag_recoexe(self) -> Path:
         """Get path for reconstruction executable."""
-        return self._get_path(self.dag.recoexe, base_path=self.dag_dir)
+        return self._get_path(self.dag.recoexe, base=self.dag_dir)
     
     @property
     def dag_milleexe(self) -> Path:
         """Get path for millepede executable."""
-        return self._get_path(self.dag.milleexe, base_path=self.dag_dir)
+        return self._get_path(self.dag.milleexe, base=self.dag_dir)
     
     def dag_iter_dir(self, iteration: int) -> Path:
         """Get directory for a specific iteration in the DAG."""
         iter_str = f"{iteration:02d}"
         return self._get_path(self.dag.iter.dir,
-                              base_path=self.dag_dir,
+                              base=self.dag_dir,
                               ensure=True,
                               iter=iter_str)
     
@@ -137,7 +142,7 @@ class AlignmentConfig(Config):
         """Get path for reconstruction submit file."""
         iter_str = f"{iteration:02d}"
         return self._get_path(self.dag.iter.recosub,
-                              base_path=self.dag_iter_dir(iteration),
+                              base=self.dag_iter_dir(iteration),
                               iter=iter_str, file=file_str)
     
     def dag_millejob(self, iteration: int) -> str:
@@ -149,14 +154,14 @@ class AlignmentConfig(Config):
         """Get path for millepede submit file."""
         iter_str = f"{iteration:02d}"
         return self._get_path(self.dag.iter.millesub,
-                              base_path=self.dag_iter_dir(iteration),
+                              base=self.dag_iter_dir(iteration),
                               iter=iter_str)
     
     def logs_dir(self, iteration: int) -> Path:
         """Get logs directory for a specific iteration."""
         iter_str = f"{iteration:02d}"
         return self._get_path(self.dag.iter.logs.dir,
-                              base_path=self.dag_iter_dir(iteration),
+                              base=self.dag_iter_dir(iteration),
                               ensure=True,
                               iter=iter_str)
     
@@ -164,42 +169,42 @@ class AlignmentConfig(Config):
         """Get path for reconstruction error log file."""
         iter_str = f"{iteration:02d}"
         return self._get_path(self.dag.iter.logs.recoerr,
-                              base_path=self.logs_dir(iteration),
+                              base=self.logs_dir(iteration),
                               iter=iter_str, file=file_str)
     
     def logs_reco_log(self, iteration: int, file_str: str) -> Path:
         """Get path for reconstruction log file."""
         iter_str = f"{iteration:02d}"
         return self._get_path(self.dag.iter.logs.recolog,
-                              base_path=self.logs_dir(iteration),
+                              base=self.logs_dir(iteration),
                               iter=iter_str, file=file_str)
     
     def logs_reco_out(self, iteration: int, file_str: str) -> Path:
         """Get path for reconstruction output log file."""
         iter_str = f"{iteration:02d}"
         return self._get_path(self.dag.iter.logs.recoout,
-                              base_path=self.logs_dir(iteration),
+                              base=self.logs_dir(iteration),
                               iter=iter_str, file=file_str)
     
     def logs_mille_err(self, iteration: int) -> Path:
         """Get path for millepede error log file."""
         iter_str = f"{iteration:02d}"
         return self._get_path(self.dag.iter.logs.milleerr,
-                              base_path=self.logs_dir(iteration),
+                              base=self.logs_dir(iteration),
                               iter=iter_str)
     
     def logs_mille_log(self, iteration: int) -> Path:
         """Get path for millepede log file."""
         iter_str = f"{iteration:02d}"
         return self._get_path(self.dag.iter.logs.millelog,
-                              base_path=self.logs_dir(iteration),
+                              base=self.logs_dir(iteration),
                               iter=iter_str)
     
     def logs_mille_out(self, iteration: int) -> Path:
         """Get path for millepede output log file."""
         iter_str = f"{iteration:02d}"
         return self._get_path(self.dag.iter.logs.milleout,
-                              base_path=self.logs_dir(iteration),
+                              base=self.logs_dir(iteration),
                               iter=iter_str)
     
     # =============================== Data info ===============================
@@ -212,37 +217,37 @@ class AlignmentConfig(Config):
     @property
     def data_config(self) -> Path:
         """Get path to copied configuration file."""
-        return self._get_path(self.data.config, base_path=self.data_dir)
+        return self._get_path(self.data.config, base=self.data_dir)
     
     @property
     def data_initial(self) -> Path:
         """Get initial inputforalign data file path."""
-        return self._get_path(self.data.initial, base_path=self.reco_dir(0))
+        return self._get_path(self.data.initial, base=self.reco_dir(0))
     
     def data_iter_dir(self, iteration: int) -> Path:
         """Get iteration directory path."""
         iter_str = f"{iteration:02d}"
         return self._get_path(self.data.iter.dir,
-                              base_path=self.data_dir,
+                              base=self.data_dir,
                               ensure=True,
                               iter=iter_str)
     
     def reco_dir(self, iteration: int) -> Path:
         """Get reconstruction directory path for an iteration."""
         return self._get_path(self.data.iter.reco,
-                              base_path=self.data_iter_dir(iteration),
+                              base=self.data_iter_dir(iteration),
                               ensure=True)
     
     def kfalign_dir(self, iteration: int) -> Path:
         """Get KF alignment directory path for an iteration."""
         return self._get_path(self.data.iter.kfalign,
-                              base_path=self.data_iter_dir(iteration),
+                              base=self.data_iter_dir(iteration),
                               ensure=True)
     
     def millepede_dir(self, iteration: int) -> Path:
         """Get Millepede directory path for an iteration."""
         return self._get_path(self.data.iter.millepede,
-                              base_path=self.data_iter_dir(iteration),
+                              base=self.data_iter_dir(iteration),
                               ensure=True)
     
     # ============================= Template info =============================
@@ -256,35 +261,35 @@ class AlignmentConfig(Config):
     def tpl_inputforalign(self) -> Path:
         """Get inputforalign template path."""
         return self._get_path(self.tpl.inputforalign,
-                              base_path=self.tpl_dir,
+                              base=self.tpl_dir,
                               exist=True)
     
     @property
     def tpl_recosub(self) -> Path:
         """Get reco submit template path."""
         return self._get_path(self.tpl.recosub,
-                              base_path=self.tpl_dir,
+                              base=self.tpl_dir,
                               exist=True)
     
     @property
     def tpl_recoexe(self) -> Path:
         """Get reco executable template path."""
         return self._get_path(self.tpl.recoexe,
-                              base_path=self.tpl_dir,
+                              base=self.tpl_dir,
                               exist=True)
     
     @property
     def tpl_millesub(self) -> Path:
         """Get mille submit template path."""
         return self._get_path(self.tpl.millesub,
-                              base_path=self.tpl_dir,
+                              base=self.tpl_dir,
                               exist=True)
     
     @property
     def tpl_milleexe(self) -> Path:
         """Get mille executable template path."""
         return self._get_path(self.tpl.milleexe,
-                              base_path=self.tpl_dir,
+                              base=self.tpl_dir,
                               exist=True)
     
     # =========================== Environment info ===========================
