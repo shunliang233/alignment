@@ -1,11 +1,9 @@
 *       *** 3 middle layers fixed steering file ***
- 
-*            Additinal files
-fortranfiles ! following bin files are fortran
-mp2con_ss.txt
-mp2par-IFT_fixside_ss.txt
 
 Cfiles       ! following bin files are Cfiles
+skipemptycons ! Skip Empty Constraint
+mp2con_ss.txt
+mp2par-IFT_fixside_ss.txt
 mp2input.bin   ! binary data file: you may have to change
  
 *            Selection of variable global parameters
