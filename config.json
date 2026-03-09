@@ -71,7 +71,7 @@
     "recoexe": "runAlignment.sh",
     "millesub": "mille.sub.tpl",
     "milleexe": "runMillepede.sh",
-    "inputforalign": "align_2022_3ST.txt"
+    "inputforalign": "align_2022_4ST_local.txt"
   },
   "src": {
     "dir": "/afs/cern.ch/user/c/chiw/condor/FASER-Alignment"
