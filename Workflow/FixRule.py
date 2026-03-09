@@ -2,7 +2,14 @@
 
 from enum import IntEnum
 from typing import ClassVar, Union
-from Label import Label
+
+from pydantic import GetCoreSchemaHandler
+from pydantic_core import core_schema
+
+try:
+    from Label import Label
+except ModuleNotFoundError:
+    from Workflow.Label import Label
 
 class Depth(IntEnum):
     TRACKER = 0
@@ -24,9 +31,9 @@ class FixRule:
     }
 
     _depths: ClassVar[dict[str, frozenset[Depth]]] = {
-        "all":   frozenset(Depth),
-        "layer": frozenset({Depth.LAYER}),
-        "side":  frozenset({Depth.SIDE}),
+        "all":    frozenset(Depth),
+        "global": frozenset({Depth.LAYER}),
+        "local":  frozenset({Depth.SIDE}),
     }
 
     # ---------------------------- Constructor ---------------------------- #
@@ -108,3 +115,24 @@ class FixRule:
             if label in comp and label.depth in depths:
                 return True
         return False
+
+    # -------------------- Pydantic v2 integration hook --------------------
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type,
+                                     handler: GetCoreSchemaHandler):
+        """Allow Pydantic to construct FixRule from a JSON list."""
+        return core_schema.no_info_plain_validator_function(
+            cls._pydantic_validate,                         # list -> FixRule
+            serialization=core_schema.plain_serializer_function_ser_schema(
+                lambda v: list(v._name))                    # FixRule -> list
+        )
+
+    @classmethod
+    def _pydantic_validate(cls, value) -> 'FixRule':
+        if isinstance(value, cls):
+            return value
+        if isinstance(value, list):
+            return cls(*value)
+        raise ValueError(
+            f"FixRule expects a list, got {type(value).__name__!r}")

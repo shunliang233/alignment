@@ -1,4 +1,6 @@
 from typing import List, Iterator
+from pydantic import GetCoreSchemaHandler
+from pydantic_core import core_schema
 
 # TODO: Upgrade RawList to accept year, run, files and then pick raw files from os.
 class RawList:
@@ -55,7 +57,7 @@ class RawList:
         """检查是否为单个文件"""
         return len(self.raw_files) == 1
     
-    # Magic methods
+    # ------------------------- Magic methods -------------------------
     def __str__(self) -> str:
         """字符串表示"""
         if len(self.raw_files) == 1:
@@ -70,3 +72,22 @@ class RawList:
     def __iter__(self) -> Iterator[str]:
         """支持迭代"""
         return iter(self.raw_files)
+
+    # -------------------- Pydantic v2 integration hook --------------------
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type,
+                                     handler: GetCoreSchemaHandler):
+        """Allow Pydantic to construct RawList from a JSON string."""
+        return core_schema.no_info_plain_validator_function(
+            cls._pydantic_validate,                          # str -> RawList
+            serialization=core_schema.to_string_ser_schema() # RawList -> str
+        )
+
+    @classmethod
+    def _pydantic_validate(cls, value) -> 'RawList':
+        if isinstance(value, cls):
+            return value
+        if isinstance(value, str):
+            return cls(value)
+        raise ValueError(
+            f"RawList expects a str, got {type(value).__name__!r}")
