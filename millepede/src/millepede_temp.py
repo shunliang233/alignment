@@ -43,13 +43,21 @@ def process_chain(input_dir: str, work_dir: str, output_path: str):
         # print(f"Copied: {txt_file} -> {dest}")
     
     commands = [
-        # IFT, fix side
+        # IFT, fix layer
         f"{os.path.join(BIN_DIR, '1convert')} -i {input_dir} -o {work_dir}/mp2input",
-        f"pede mp2str-IFT_fixside_ss.txt",
+        f"pede mp2str-IFT_fixlayer_ss.txt",
         f"cp ../1reco/inputforalign.txt ./inputforalign_temp.txt",
         f"{os.path.join(BIN_DIR, '5.1PedetoDB_ss')} <./millepede.res >>./inputforalign_temp.txt",
         f"{os.path.join(BIN_DIR, '5.2add_param')} <./inputforalign_temp.txt >./inputforalign_new.txt",
         f"cp ./inputforalign_new.txt ../inputforalign.txt"
+        
+        # IFT, fix side
+        # f"{os.path.join(BIN_DIR, '1convert')} -i {input_dir} -o {work_dir}/mp2input",
+        # f"pede mp2str-IFT_fixside_ss.txt",
+        # f"cp ../1reco/inputforalign.txt ./inputforalign_temp.txt",
+        # f"{os.path.join(BIN_DIR, '5.1PedetoDB_ss')} <./millepede.res >>./inputforalign_temp.txt",
+        # f"{os.path.join(BIN_DIR, '5.2add_param')} <./inputforalign_temp.txt >./inputforalign_new.txt",
+        # f"cp ./inputforalign_new.txt ../inputforalign.txt"
         
         # 3ST
         # f"{os.path.join(BIN_DIR, '1convert')} -i {input_dir} -o {work_dir}/mp2input",
