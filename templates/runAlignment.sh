@@ -10,6 +10,7 @@ KFALIGN_DIR=$6
 SRC_DIR=$7
 CALYPSO_ASETUP=$8
 CALYPSO_SETUP=$9
+VERBOSITY=${10:-INFO}
 echo "Running with parameters:"
 echo " Year: $YEAR"
 echo " Run: $RUN"
@@ -20,6 +21,7 @@ echo " KFAlignDir: $KFALIGN_DIR"
 echo " SrcDir: $SRC_DIR"
 echo " CalypsoAsetup: $CALYPSO_ASETUP"
 echo " CalypsoSetup: $CALYPSO_SETUP"
+echo " Verbosity: $VERBOSITY"
 echo ""
 
 # Dir for condor to store logs
@@ -74,9 +76,9 @@ echo "=== Finished aligndb_copy.sh ==="
 # Build the command based on number of stations
 FILE_PATH="/eos/experiment/faser/raw/${YEAR}/${RUN}/Faser-Physics-${RUN}-${FILE}.raw"
 if [ "$STATIONS" = "3" ]; then
-    CMD="python $SRC_DIR/faser_reco_alignment.py \"$FILE_PATH\" --alignment --noBackward --noIFT"
+    CMD="python $SRC_DIR/faser_reco_alignment.py \"$FILE_PATH\" --alignment --noBackward --noIFT --output_level $VERBOSITY"
 elif [ "$STATIONS" = "4" ]; then
-    CMD="python $SRC_DIR/faser_reco_alignment.py \"$FILE_PATH\" --alignment --noBackward"
+    CMD="python $SRC_DIR/faser_reco_alignment.py \"$FILE_PATH\" --alignment --noBackward --output_level $VERBOSITY"
 else
     echo "Error: STATIONS must be 3 or 4, got: $STATIONS"
     exit 1

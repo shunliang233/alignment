@@ -98,6 +98,7 @@ class DAGManager:
                     src_dir=self.config.src_dir,
                     calypso_asetup=self.config.env_calypso_asetup,
                     calypso_setup=self.config.env_calypso_setup,
+                    verbosity=self.config.verbosity,
                 )
                 recosub = self.config.dag_recosub(it, file_str)
                 if recosub.exists():

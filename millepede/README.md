@@ -85,6 +85,8 @@ source /path/to/root/bin/thisroot.sh
 root-config --version
 ```
 
+可以使用`/cvmfs/sft.cern.ch/lcg/app/releases/ROOT/6.36.04/x86_64-almalinux9.6-gcc115-opt/bin/thisroot.sh`
+
 
 ### CMake 配置失败
 ```bash
@@ -94,6 +96,23 @@ cmake -B build
 
 # 查看详细输出
 cmake -B build --debug-output
+```
+
+### `CMake` 尝试在`/usr/local/bin`安装可执行文件但权限被拒绝
+
+```bash
+CMake Error at build/cmake_install.cmake:57 (file):
+  file INSTALL cannot copy file
+  "/afs/cern.ch/user/c/chiw/condor/FASER-Alignment/millepede/build/1convert"
+  to "/usr/local/bin/1convert": Permission denied.
+```
+
+手动配置安装路径，使用命令：
+
+```bash
+cmake -B build -DCMAKE_INSTALL_PREFIX=.
+cmake --build build
+cmake --install build
 ```
 
 ## 开发说明

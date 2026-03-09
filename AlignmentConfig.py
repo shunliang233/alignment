@@ -86,8 +86,28 @@ class AlignmentConfig(Config):
                                run=self.run,
                                files=self.files,
                                stations=self.stations)
+
+    _VALID_OUTPUT_LEVELS = ("VERBOSE", "DEBUG", "INFO", "WARNING", "ERROR", "FATAL")
+
+    @property
+    def verbosity(self) -> str:
+        """Get reconstruction output verbosity level.
+
+        Optional in JSON (key ``raw.verbosity``). Defaults to ``"INFO"``.
+        Valid values: VERBOSE, DEBUG, INFO, WARNING, ERROR, FATAL.
+        """
+        try:
+            raw_verbosity = self.raw.verbosity
+        except AttributeError:
+            return "INFO"
+        level = self._get_str(raw_verbosity).upper()
+        if level not in self._VALID_OUTPUT_LEVELS:
+            raise ValueError(
+                f"raw.verbosity '{level}' is not valid. "
+                f"Expected one of: {', '.join(self._VALID_OUTPUT_LEVELS)}"
+            )
+        return level
     
-    # ============================ Workflow info =============================
     # def workflow(self) 
     
     # ============================== Source info ==============================
