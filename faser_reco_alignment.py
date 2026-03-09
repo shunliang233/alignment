@@ -64,7 +64,11 @@ parser.add_argument("--skip", type=int, default=0,
 
 # 调试和输出控制
 parser.add_argument("-v", "--verbose", action='store_true', 
-                    help="Turn on DEBUG output")
+                    help="Turn on VERBOSE output")
+# 直接引入Athena的VERBOSE,DEBUG,INFO,WARNING,ERROR,FATAL日志输出等级，可被verbose选项超控
+parser.add_argument("--output_level", type=str, default="INFO",
+                    help="Set output level (VERBOSE, DEBUG, INFO, WARNING, ERROR, FATAL)")
+
 
 # 数据类型标识选项
 parser.add_argument("--isMC", action='store_true',
@@ -145,7 +149,8 @@ if args.skip > 0:
 """基础框架组件导入"""
 from AthenaConfiguration.ComponentAccumulator import ComponentAccumulator # 算法容器和流水线构建器
 from AthenaConfiguration.ComponentFactory import CompFactory # 用于创建算法和服务的工厂
-from AthenaCommon.Constants import VERBOSE, INFO # 日志记录级别
+from AthenaCommon.Constants import VERBOSE, DEBUG, INFO, WARNING, ERROR, FATAL # 日志记录级别
+# from AthenaCommon.Constants import VERBOSE, INFO
 from AthenaCommon.Configurable import Configurable # 基类，用于所有可配置组件
 from CalypsoConfiguration.AllConfigFlags import initConfigFlags # 初始化配置标志
 Configurable.configurableRun3Behavior = True # 使用 Run 3 行为
@@ -165,6 +170,27 @@ else:
 configFlags.Input.ProjectName = "data20"         # 指定项目名称
 #configFlags.GeoModel.Align.Dynamic    = False   # 关闭动态几何对齐
 configFlags.Exec.SkipEvents = args.skip          # 设置跳过的事件数
+
+# 检查输出日志的级别设置
+verbosity_map = {
+    "VERBOSE": VERBOSE,
+    "DEBUG": DEBUG,
+    "INFO": INFO,
+    "WARNING": WARNING,
+    "ERROR": ERROR,
+    "FATAL": FATAL,
+}
+if args.output_level in verbosity_map:
+    # '--verbose'/'-v' 选项会覆盖 '--output_level' 的设置，将输出级别设置为 VERBOSE
+    output_level = verbosity_map[args.output_level] if not args.verbose else VERBOSE
+else:
+    print(f"Invalid output level {args.output_level}")
+    sys.exit(1)
+
+isHighVerbosity = output_level in [VERBOSE, DEBUG]
+# isHighVerbosity = output_level == VERBOSE
+isLowVerbosity = output_level in [INFO, ERROR, FATAL]
+# isLowVerbosity = output_level in [INFO]
 
 # ====================================
 # 探测器几何配置和数据库标签设置
@@ -428,17 +454,16 @@ if not args.isMC:
     replicaSvc.UseCOOLFrontier = False
     replicaSvc.UseGeomSQLite = True
 
-# Configure verbosity    
-if args.verbose:
-    acc.foreach_component("*").OutputLevel = VERBOSE
+# Configure verbosity
+acc.foreach_component("*").OutputLevel = output_level
+if isHighVerbosity:
     configFlags.dump()
     # Print out POOL conditions
     import os
     print(f"ATLAS_POOLCOND_PATH: {os.environ['ATLAS_POOLCOND_PATH']}")
     print(f"PoolSvc.ReadCatalog: {acc.getService('PoolSvc').ReadCatalog}")
     print(f"PoolSvc.WriteCatalog: {acc.getService('PoolSvc').WriteCatalog}")
-else:
-    acc.foreach_component("*").OutputLevel = INFO
+if isLowVerbosity:
     # Reduce event loop printout
     eventLoop = CompFactory.AthenaEventLoopMgr()
     eventLoop.EventPrintoutInterval = 100

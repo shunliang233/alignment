@@ -18,5 +18,5 @@ on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)
 max_retries = 3
 requirements = (Machine =!= LastRemoteHost) && (OpSysAndVer =?= "AlmaLinux9")
 
-arguments = {year} {run} {stations} {file_str} {reco_dir} {kfalign_dir} {src_dir} {calypso_asetup} {calypso_setup}
+arguments = {year} {run} {stations} {file_str} {reco_dir} {kfalign_dir} {src_dir} {calypso_asetup} {calypso_setup} {verbosity}
 queue

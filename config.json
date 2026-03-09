@@ -6,6 +6,7 @@
     "iters": 15,
     "stations": 4,
     "format": "Y{year}_R{run}_F{files}_ST{stations}_layer"
+    "verbosity": "INFO"
   },
   "workflow": {
     "set0": {
