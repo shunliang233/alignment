@@ -2,10 +2,10 @@
   "raw": {
     "year": 2022,
     "run": 8294,
-    "files": "101-150",
-    "iters": 1,
+    "files": "101-151",
+    "iters": 15,
     "stations": 4,
-    "format": "Y{year}_R{run}_F{files}_ST{stations}_side",
+    "format": "Y{year}_R{run}_F{files}_ST{stations}_layer"
     "verbosity": "INFO"
   },
   "workflow": {
@@ -33,7 +33,7 @@
     }
   },
   "dag": {
-    "dir": "/afs/cern.ch/user/c/chiw/condor/FASER-Alignment/dag_files/{format}",
+    "dir": "/afs/cern.ch/user/s/shunlian/alignment/dag_files/{format}",
     "file": "alignment.dag",
     "recoexe": "runAlignment.sh",
     "milleexe": "runMillepede.sh",
@@ -55,7 +55,7 @@
     }
   },
   "data": {
-    "dir": "/eos/user/c/chiw/FASER/Alignment/Data/{format}",
+    "dir": "/eos/home-s/shunlian/Alignment/data/{format}",
     "config": "config.json",
     "initial": "inputforalign.txt",
     "iter": {
@@ -66,7 +66,7 @@
     }
   },
   "tpl": {
-    "dir": "/afs/cern.ch/user/c/chiw/condor/FASER-Alignment/templates",
+    "dir": "/afs/cern.ch/user/s/shunlian/alignment/templates",
     "recosub": "reco.sub.tpl",
     "recoexe": "runAlignment.sh",
     "millesub": "mille.sub.tpl",
@@ -74,14 +74,14 @@
     "inputforalign": "align_2022_4ST_local.txt"
   },
   "src": {
-    "dir": "/afs/cern.ch/user/c/chiw/condor/FASER-Alignment"
+    "dir": "/afs/cern.ch/user/s/shunlian/alignment"
   },
   "env": {
     "calypso": {
-      "asetup": "/eos/user/c/chiw/FASER/Alignment/calypso/asetup.faser",
-      "setup": "/eos/user/c/chiw/FASER/Alignment/run/setup.sh"
+      "asetup": "/eos/home-s/shunlian/Alignment/calypso/asetup.faser",
+      "setup": "/eos/home-s/shunlian/Alignment/install/setup.sh"
     },
-    "pede": "/eos/user/c/chiw/FASER/Utils/Millipede/pede",
+    "pede": "/eos/home-s/shunlian/Environments/apps/Millepede-II/V04-17-05",
     "root": "/cvmfs/sft.cern.ch/lcg/app/releases/ROOT/6.36.04/x86_64-almalinux9.6-gcc115-opt/bin/thisroot.sh"
   }
 }
