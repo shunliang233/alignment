@@ -3,45 +3,33 @@
     "year": 2022,
     "run": 8294,
     "files": "101-151",
-    "initial": "/afs/cern.ch/user/s/shunlian/alignment/templates/align_2022_3ST.txt",
-    "format": "Y{year:0>4}_R{run:0>6}_F{files}"
+    "iters": 15,
+    "stations": 3,
+    "format": "Y{year}_R{run}_F{files}_ST{stations}"
   },
-  "set": {
-      "dir": "set{set}_iters{iters}_st{reco}_{comment}",
-      "iter": "iter{iter}",
-      "reco": "reco",
-      "pede": "pede{pede}",
-      "steps": [
-        {
-          "iters": 15,
-          "reco": 3,
-          "comment": "fix2layers",
-          "pedes": [
-              ["IFT", 210, 410],
-              ["IFT", 200, 220, 300, 310, 320, 400, 420]
-            ]
-        },
-        {
-          "iters": 15,
-          "reco": 4,
-          "comment": "fixlocal",
-          "pedes": [
-            ["local", "3ST"]
-          ]
-        },
-        {
-          "iters": 15,
-          "reco": 4,
-          "comment": "fixglobal",
-          "pedes": [
-            ["global", "3ST"]
-          ]
-        }
-      ]
-  },
-  "data": {
-    "dir": "/eos/home-s/shunlian/Alignment/data/{format}",
-    "config": "config.json"
+  "workflow": {
+    "set0": {
+      "iters": 10,
+      "comment": "3ST Alignment",
+      "pede": {
+        "step0": ["IFT", 21, 41],
+        "step1": ["IFT", 20, 22, 30, 31, 32, 40, 42]
+      }
+    },
+    "set1": {
+      "iters": 10,
+      "comment": "IFT Alignment (global)",
+      "pede": {
+        "step0": ["modules", "3ST"]
+      }
+    },
+    "set2": {
+      "iters": 10,
+      "comment": "IFT Alignment (local)",
+      "pede": {
+        "step0": ["layers", "3ST"]
+      }
+    }
   },
   "dag": {
     "dir": "/afs/cern.ch/user/s/shunlian/alignment/dag_files/{format}",
@@ -65,12 +53,24 @@
       }
     }
   },
+  "data": {
+    "dir": "/eos/home-s/shunlian/Alignment/data/{format}",
+    "config": "config.json",
+    "initial": "inputforalign.txt",
+    "iter": {
+      "dir": "iter{iter}",
+      "reco": "1reco",
+      "kfalign": "2kfalignment",
+      "millepede": "3millepede"
+    }
+  },
   "tpl": {
     "dir": "/afs/cern.ch/user/s/shunlian/alignment/templates",
-    "recosub": "${dir}/reco.sub.tpl",
-    "recoexe": "${dir}/runAlignment.sh",
-    "millesub": "${dir}/mille.sub.tpl",
-    "milleexe": "${dir}/runMillepede.sh"
+    "recosub": "reco.sub.tpl",
+    "recoexe": "runAlignment.sh",
+    "millesub": "mille.sub.tpl",
+    "milleexe": "runMillepede.sh",
+    "inputforalign": "inputforalign.txt"
   },
   "src": {
     "dir": "/afs/cern.ch/user/s/shunlian/alignment"

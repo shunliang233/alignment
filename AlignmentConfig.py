@@ -2,263 +2,314 @@
 """
 Alignment-specific configuration manager for FASER alignment scripts.
 
-Loads config.yaml via the Pydantic AppConfig schema (Config.py), then
-exposes validated, formatted values as properties and helper methods.
-
-All type checking and key-existence checking is done by Pydantic at
-construction time (model_validate).  This class only handles:
-  - string formatting  ({year}, {run}, {iter}, …)
-  - path construction  (joining base dirs, checking existence)
-  - archiving          (copying config.yaml into the data directory)
+This module extends the basic Config class with alignment-specific
+configuration handling, including path validation, formatting, and
+type checking for alignment workflow parameters.
 """
 
-import shutil
-from omegaconf import OmegaConf
 from pathlib import Path
 
-from Config import AppConfig, SetConfig, StepConfig
+from Config import Config
 from RawList import RawList
-from Workflow.AlignmentSet import AlignmentSet
 
 
-class AlignmentConfig:
-    """Manages alignment configuration with formatting and path helpers."""
+# class IterSet():
+#     """Set of iteration identifiers."""
+    
+#     def __init__(self, iters: int):
+#         self._iters: int = iters
+#         self._comment: str = 
+    
 
+
+class AlignmentConfig(Config):
+    """Manages alignment configuration with validation and formatting."""
+    
     def __init__(self, config_file: Path):
         """
-        Load and validate configuration.
-
+        Initialize alignment configuration.
+        
         Args:
-            config_file: Path to YAML configuration file.
-
+            config_file: Path to JSON configuration file.
+        
         Raises:
-            FileNotFoundError: If the config file does not exist.
-            pydantic.ValidationError: If any field is missing or has the wrong type.
+            FileNotFoundError: If config file or required paths don't exist
+            TypeError: If configuration values have incorrect types
+            ValueError: If configuration values are invalid
         """
-        if not config_file.exists():
-            raise FileNotFoundError(
-                f"Configuration file not found: {config_file}")
-        self._config_file: Path = config_file
-        self._cfg: AppConfig = AppConfig.model_validate(
-            OmegaConf.to_container(OmegaConf.load(config_file), resolve=True))
-
-    # =============================== Archive ================================
-
-    def archive(self) -> None:
-        """Copy the config file into the data directory."""
-        dest = self.data_config
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy(self._config_file, dest)
-
-    # =============================== Raw info ===============================
-
-    @property
-    def year(self) -> str:
-        """Year string, zero-padded to 4 digits."""
-        return self._cfg.raw.year
-
-    @property
-    def run(self) -> str:
-        """Run string, zero-padded to 6 digits."""
-        return self._cfg.raw.run
-
-    @property
-    def files(self) -> RawList:
-        """Files range as a RawList object."""
-        return self._cfg.raw.files
-
-    @property
-    def initial(self) -> Path:
-        """Initial parameters file path (must exist)."""
-        path = self._cfg.raw.initial
-        if not path.exists():
-            raise FileNotFoundError(
-                f"raw.initial: path does not exist: {path}")
-        return path
-
-    @property
-    def format(self) -> str:
-        """Formatted run identifier string, e.g. Y2022_R008294_F101-151."""
-        return self._cfg.raw.format
-
-    # =============================== Data info ==============================
-
-    @property
-    def data_dir(self) -> Path:
-        """Data directory path (created if it does not exist)."""
-        path = self._cfg.data.dir
-        path.mkdir(parents=True, exist_ok=True)
-        return path
-
-    @property
-    def data_config(self) -> Path:
-        """Path where the config file will be archived inside data_dir."""
-        return self.data_dir / self._cfg.data.config
-
-    # ========================== Sets info ===================================
-
-    def make_set(self, step_index: int) -> AlignmentSet:
-        """
-        Factory: construct an AlignmentSet for the given step index.
-
-        Args:
-            step_index: 0-based index into set.steps.
-
-        Raises:
-            IndexError: If step_index is out of range.
-        """
-        steps = self._cfg.set.steps
-        if not (0 <= step_index < len(steps)):
-            raise IndexError(
-                f"step_index {step_index} out of range [0, {len(steps)})")
-        return AlignmentSet(self._cfg.set, steps[step_index], step_index)
+        # NOTE: Never explicitly/implicitly invoke __getattr__ in __init__
+        super().__init__(config_file)
     
     @property
-    def set_dir(self):
-        """Root directory for all sets (created if it does not exist)."""
-        path = self._cfg.set.dir.format(set='', iters='', reco='', comment='', aa="")
-        path = Path(path)
-        path.mkdir(parents=True, exist_ok=True)
-        return path
+    def _archive_dest(self) -> Path:
+        return self.data_config
 
-    # ============================== Source info =============================
-
+    # =============================== Raw info ===============================
+    
+    @property
+    def year(self) -> str:
+        """Get year string from configuration (4 digits)."""
+        year = self._get_int(self.raw.year)
+        return str(year).zfill(4)
+    
+    @property
+    def run(self) -> str:
+        """Get run string from configuration (6 digits)."""
+        run = self._get_int(self.raw.run)
+        return str(run).zfill(6)
+    
+    @property
+    def files(self) -> RawList:
+        """Get files list from configuration."""
+        files = self._get_str(self.raw.files)
+        return RawList(files)
+    
+    @property
+    def iters(self) -> int:
+        """Get iterations integer from configuration."""
+        iters = self._get_int(self.raw.iters)
+        return int(iters)
+    
+    @property
+    def stations(self) -> int:
+        """Get number of stations from configuration."""
+        stations = self._get_int(self.raw.stations)
+        if stations not in (3, 4):
+            raise ValueError(f"raw.stations must be 3 or 4, got {stations}")
+        return stations
+    
+    @property
+    def initial(self) -> Path:
+        """Get initial parameters file path from configuration."""
+        return self._get_path(self.raw.initial, exist=True)
+    
+    @property
+    def format(self) -> str:
+        """Get formatted string from configuration."""
+        return self._get_str(self.raw.format,
+                               year=self.year,
+                               run=self.run,
+                               files=self.files,
+                               stations=self.stations)
+    
+    # ============================ Workflow info =============================
+    # def workflow(self) 
+    
+    # ============================== Source info ==============================
+    
     @property
     def src_dir(self) -> Path:
-        """Source directory path (must exist)."""
-        path = self._cfg.src.dir
-        if not path.exists():
-            raise FileNotFoundError(
-                f"src.dir: path does not exist: {path}")
-        return path
-
+        """Get source directory path."""
+        return self._get_path(self.src.dir, exist=True)
+    
     # =============================== DAG info ===============================
-
+    
     @property
     def dag_dir(self) -> Path:
-        """DAG files directory (created if it does not exist)."""
-        path = self._cfg.dag.dir
-        path.mkdir(parents=True, exist_ok=True)
-        return path
-
+        """Get directory for DAG files."""
+        return self._get_path(self.dag.dir, ensure=True, format=self.format)
+    
     @property
     def dag_file(self) -> Path:
-        return self._cfg.dag.file
-
+        """Get path for DAG file."""
+        return self._get_path(self.dag.file, base=self.dag_dir)
+    
     @property
     def dag_recoexe(self) -> Path:
-        return self._cfg.dag.recoexe
-
+        """Get path for reconstruction executable."""
+        return self._get_path(self.dag.recoexe, base=self.dag_dir)
+    
     @property
     def dag_milleexe(self) -> Path:
-        return self._cfg.dag.milleexe
-
+        """Get path for millepede executable."""
+        return self._get_path(self.dag.milleexe, base=self.dag_dir)
+    
     def dag_iter_dir(self, iteration: int) -> Path:
-        """DAG iteration directory (created if it does not exist)."""
+        """Get directory for a specific iteration in the DAG."""
         iter_str = f"{iteration:02d}"
-        path = Path(self._cfg.dag.iter.dir.format(iter=iter_str))
-        path.mkdir(parents=True, exist_ok=True)
-        return path
-
+        return self._get_path(self.dag.iter.dir,
+                              base=self.dag_dir,
+                              ensure=True,
+                              iter=iter_str)
+    
     def dag_recojob(self, iteration: int, file_str: str) -> str:
+        """Get job name for reconstruction."""
         iter_str = f"{iteration:02d}"
-        return self._cfg.dag.iter.recojob.format(iter=iter_str, file=file_str)
-
+        return self._get_str(self.dag.iter.recojob,
+                             iter=iter_str, file=file_str)
+    
     def dag_recosub(self, iteration: int, file_str: str) -> Path:
+        """Get path for reconstruction submit file."""
         iter_str = f"{iteration:02d}"
-        return Path(self._cfg.dag.iter.recosub.format(iter=iter_str, file=file_str))
-
+        return self._get_path(self.dag.iter.recosub,
+                              base=self.dag_iter_dir(iteration),
+                              iter=iter_str, file=file_str)
+    
     def dag_millejob(self, iteration: int) -> str:
+        """Get job name for millepede."""
         iter_str = f"{iteration:02d}"
-        return self._cfg.dag.iter.millejob.format(iter=iter_str)
-
+        return self._get_str(self.dag.iter.millejob, iter=iter_str)
+    
     def dag_millesub(self, iteration: int) -> Path:
+        """Get path for millepede submit file."""
         iter_str = f"{iteration:02d}"
-        return Path(self._cfg.dag.iter.millesub.format(iter=iter_str))
-
+        return self._get_path(self.dag.iter.millesub,
+                              base=self.dag_iter_dir(iteration),
+                              iter=iter_str)
+    
     def logs_dir(self, iteration: int) -> Path:
-        """Logs directory for a specific iteration (created if needed)."""
+        """Get logs directory for a specific iteration."""
         iter_str = f"{iteration:02d}"
-        path = Path(self._cfg.dag.iter.logs.dir.format(iter=iter_str))
-        path.mkdir(parents=True, exist_ok=True)
-        return path
-
+        return self._get_path(self.dag.iter.logs.dir,
+                              base=self.dag_iter_dir(iteration),
+                              ensure=True,
+                              iter=iter_str)
+    
     def logs_reco_err(self, iteration: int, file_str: str) -> Path:
+        """Get path for reconstruction error log file."""
         iter_str = f"{iteration:02d}"
-        return Path(self._cfg.dag.iter.logs.recoerr.format(
-            iter=iter_str, file=file_str))
-
+        return self._get_path(self.dag.iter.logs.recoerr,
+                              base=self.logs_dir(iteration),
+                              iter=iter_str, file=file_str)
+    
     def logs_reco_log(self, iteration: int, file_str: str) -> Path:
+        """Get path for reconstruction log file."""
         iter_str = f"{iteration:02d}"
-        return Path(self._cfg.dag.iter.logs.recolog.format(
-            iter=iter_str, file=file_str))
-
+        return self._get_path(self.dag.iter.logs.recolog,
+                              base=self.logs_dir(iteration),
+                              iter=iter_str, file=file_str)
+    
     def logs_reco_out(self, iteration: int, file_str: str) -> Path:
+        """Get path for reconstruction output log file."""
         iter_str = f"{iteration:02d}"
-        return Path(self._cfg.dag.iter.logs.recoout.format(
-            iter=iter_str, file=file_str))
-
+        return self._get_path(self.dag.iter.logs.recoout,
+                              base=self.logs_dir(iteration),
+                              iter=iter_str, file=file_str)
+    
     def logs_mille_err(self, iteration: int) -> Path:
+        """Get path for millepede error log file."""
         iter_str = f"{iteration:02d}"
-        return Path(self._cfg.dag.iter.logs.milleerr.format(iter=iter_str))
-
+        return self._get_path(self.dag.iter.logs.milleerr,
+                              base=self.logs_dir(iteration),
+                              iter=iter_str)
+    
     def logs_mille_log(self, iteration: int) -> Path:
+        """Get path for millepede log file."""
         iter_str = f"{iteration:02d}"
-        return Path(self._cfg.dag.iter.logs.millelog.format(iter=iter_str))
-
+        return self._get_path(self.dag.iter.logs.millelog,
+                              base=self.logs_dir(iteration),
+                              iter=iter_str)
+    
     def logs_mille_out(self, iteration: int) -> Path:
+        """Get path for millepede output log file."""
         iter_str = f"{iteration:02d}"
-        return Path(self._cfg.dag.iter.logs.milleout.format(iter=iter_str))
-
-    # ============================= Template info ============================
-
+        return self._get_path(self.dag.iter.logs.milleout,
+                              base=self.logs_dir(iteration),
+                              iter=iter_str)
+    
+    # =============================== Data info ===============================
+    
+    @property
+    def data_dir(self) -> Path:
+        """Get data directory path."""
+        return self._get_path(self.data.dir, ensure=True, format=self.format)
+    
+    @property
+    def data_config(self) -> Path:
+        """Get path to copied configuration file."""
+        return self._get_path(self.data.config, base=self.data_dir)
+    
+    @property
+    def data_initial(self) -> Path:
+        """Get initial inputforalign data file path."""
+        return self._get_path(self.data.initial, base=self.reco_dir(0))
+    
+    def data_iter_dir(self, iteration: int) -> Path:
+        """Get iteration directory path."""
+        iter_str = f"{iteration:02d}"
+        return self._get_path(self.data.iter.dir,
+                              base=self.data_dir,
+                              ensure=True,
+                              iter=iter_str)
+    
+    def reco_dir(self, iteration: int) -> Path:
+        """Get reconstruction directory path for an iteration."""
+        return self._get_path(self.data.iter.reco,
+                              base=self.data_iter_dir(iteration),
+                              ensure=True)
+    
+    def kfalign_dir(self, iteration: int) -> Path:
+        """Get KF alignment directory path for an iteration."""
+        return self._get_path(self.data.iter.kfalign,
+                              base=self.data_iter_dir(iteration),
+                              ensure=True)
+    
+    def millepede_dir(self, iteration: int) -> Path:
+        """Get Millepede directory path for an iteration."""
+        return self._get_path(self.data.iter.millepede,
+                              base=self.data_iter_dir(iteration),
+                              ensure=True)
+    
+    # ============================= Template info =============================
+    
     @property
     def tpl_dir(self) -> Path:
-        """Template directory (must exist)."""
-        return self._check_exists(self._cfg.tpl.dir, "tpl.dir")
-
+        """Get template directory path."""
+        return self._get_path(self.tpl.dir, exist=True)
+    
+    @property
+    def tpl_inputforalign(self) -> Path:
+        """Get inputforalign template path."""
+        return self._get_path(self.tpl.inputforalign,
+                              base=self.tpl_dir,
+                              exist=True)
+    
     @property
     def tpl_recosub(self) -> Path:
-        return self._check_exists(self._cfg.tpl.recosub, "tpl.recosub")
-
+        """Get reco submit template path."""
+        return self._get_path(self.tpl.recosub,
+                              base=self.tpl_dir,
+                              exist=True)
+    
     @property
     def tpl_recoexe(self) -> Path:
-        return self._check_exists(self._cfg.tpl.recoexe, "tpl.recoexe")
-
+        """Get reco executable template path."""
+        return self._get_path(self.tpl.recoexe,
+                              base=self.tpl_dir,
+                              exist=True)
+    
     @property
     def tpl_millesub(self) -> Path:
-        return self._check_exists(self._cfg.tpl.millesub, "tpl.millesub")
-
+        """Get mille submit template path."""
+        return self._get_path(self.tpl.millesub,
+                              base=self.tpl_dir,
+                              exist=True)
+    
     @property
     def tpl_milleexe(self) -> Path:
-        return self._check_exists(self._cfg.tpl.milleexe, "tpl.milleexe")
-
+        """Get mille executable template path."""
+        return self._get_path(self.tpl.milleexe,
+                              base=self.tpl_dir,
+                              exist=True)
+    
     # =========================== Environment info ===========================
-
+    
     @property
     def env_calypso_asetup(self) -> Path:
-        return self._check_exists(self._cfg.env.calypso.asetup,
-                                  "env.calypso.asetup")
-
+        """Get Calypso asetup script path from configuration."""
+        return self._get_path(self.env.calypso.asetup, exist=True)
+    
     @property
     def env_calypso_setup(self) -> Path:
-        return self._check_exists(self._cfg.env.calypso.setup,
-                                  "env.calypso.setup")
-
+        """Get Calypso setup script path from configuration."""
+        return self._get_path(self.env.calypso.setup, exist=True)
+    
     @property
     def env_pede(self) -> Path:
-        return self._check_exists(self._cfg.env.pede, "env.pede")
-
+        """Get Millepede installation directory path from configuration."""
+        return self._get_path(self.env.pede, exist=True)
+    
     @property
     def env_root(self) -> Path:
-        return self._check_exists(self._cfg.env.root, "env.root")
-
-    # ========================== Internal helpers ============================
-
-    @staticmethod
-    def _check_exists(path: Path, label: str) -> Path:
-        """Raise FileNotFoundError if path does not exist."""
-        if not path.exists():
-            raise FileNotFoundError(
-                f"{label}: path does not exist: {path}")
-        return path
+        """Get ROOT setup script path from configuration."""
+        return self._get_path(self.env.root, exist=True)

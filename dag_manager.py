@@ -114,29 +114,8 @@ class DAGManager:
             print(f"Overwritting millepede executable: {dag_milleexe}")
         shutil.copy(self.config.tpl_milleexe, dag_milleexe)
     
-    @staticmethod
-    def _serialize_pede_steps(pede_node) -> str:
-        """Serialize pede step descriptors to a compact CLI-safe string.
-
-        Format: each step is a comma-separated list of fix descriptors,
-        steps are separated by '|'.
-        Example: "IFT,210,410|IFT,200,220,300,310,320,400,420"
-        """
-        step_strings = []
-        for key in sorted(pede_node._data.keys()):
-            items = pede_node._data[key]
-            step_strings.append(','.join(str(x) for x in items))
-        return '|'.join(step_strings)
-
     def create_mille_submit_files(self) -> None:
         """Create millepede submit files for all iterations."""
-        # Serialize pede workflow once — use the first set in workflow (set0)
-        default_set = sorted(self.config.workflow._data.keys())[0]
-        pede_node = getattr(self.config.workflow, default_set).pede
-        steps = self._serialize_pede_steps(pede_node)
-        bin_dir = self.config.src_dir / 'millepede' / 'bin'
-        tpl_dir = self.config.tpl_dir
-
         for it in range(self.config.iters):
             with open(self.config.tpl_millesub, 'r') as tpl_file:
                 tpl_content = tpl_file.read()
@@ -146,14 +125,11 @@ class DAGManager:
                 err_path=self.config.logs_mille_err(it),
                 log_path=self.config.logs_mille_log(it),
                 to_next_iter=(it < self.config.iters - 1),
+                src_dir=self.config.src_dir,
                 kfalign_dir=self.config.kfalign_dir(it),
                 next_reco_dir=self.config.reco_dir(it + 1) if it < self.config.iters - 1 else "",
                 env_pede=self.config.env_pede,
-                env_root=self.config.env_root,
-                src_dir=self.config.src_dir,
-                bin_dir=bin_dir,
-                tpl_dir=tpl_dir,
-                steps=steps,
+                env_root=self.config.env_root
             )
             millesub = self.config.dag_millesub(it)
             if millesub.exists():
@@ -223,7 +199,7 @@ def main():
     #                     help='Enable 4-station mode')
     # parser.add_argument('--threest', action='store_true', default=True,
     #                     help='Enable 3-station mode')
-    parser.add_argument('--config', type=str, default='config.yaml',
+    parser.add_argument('--config', type=str, default='config.json',
                         help='Path to configuration file')
     parser.add_argument('--submit', action='store_true', default=False,
                         help='Automatically submit DAG to HTCondor')
