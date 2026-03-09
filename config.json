@@ -5,7 +5,7 @@
     "files": "101-151",
     "iters": 15,
     "stations": 4,
-    "format": "Y{year}_R{run}_F{files}_ST{stations}_side"
+    "format": "Y{year}_R{run}_F{files}_ST{stations}_layer"
   },
   "workflow": {
     "set0": {
@@ -70,7 +70,7 @@
     "recoexe": "runAlignment.sh",
     "millesub": "mille.sub.tpl",
     "milleexe": "runMillepede.sh",
-    "inputforalign": "align_2022_3ST.txt"
+    "inputforalign": "align_2022_4ST_local.txt"
   },
   "src": {
     "dir": "/afs/cern.ch/user/s/shunlian/alignment"
