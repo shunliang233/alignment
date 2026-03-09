@@ -2,18 +2,18 @@
 """
 Alignment-specific configuration manager for FASER alignment scripts.
 
-Loads config.yaml via the Pydantic AppConfig schema (Config.py), then
+Loads config.json via the Pydantic AppConfig schema (Config.py), then
 exposes validated, formatted values as properties and helper methods.
 
 All type checking and key-existence checking is done by Pydantic at
 construction time (model_validate).  This class only handles:
   - string formatting  ({year}, {run}, {iter}, …)
   - path construction  (joining base dirs, checking existence)
-  - archiving          (copying config.yaml into the data directory)
+  - archiving          (copying config.json into the data directory)
 """
 
+import json
 import shutil
-from omegaconf import OmegaConf
 from pathlib import Path
 
 from Config import AppConfig, SetConfig, StepConfig
@@ -29,7 +29,7 @@ class AlignmentConfig:
         Load and validate configuration.
 
         Args:
-            config_file: Path to YAML configuration file.
+            config_file: Path to JSON configuration file.
 
         Raises:
             FileNotFoundError: If the config file does not exist.
@@ -40,7 +40,7 @@ class AlignmentConfig:
                 f"Configuration file not found: {config_file}")
         self._config_file: Path = config_file
         self._cfg: AppConfig = AppConfig.model_validate(
-            OmegaConf.to_container(OmegaConf.load(config_file), resolve=True))
+            json.loads(config_file.read_text()))
 
     # =============================== Archive ================================
 
@@ -55,12 +55,12 @@ class AlignmentConfig:
     @property
     def year(self) -> str:
         """Year string, zero-padded to 4 digits."""
-        return self._cfg.raw.year
+        return str(self._cfg.raw.year).zfill(4)
 
     @property
     def run(self) -> str:
         """Run string, zero-padded to 6 digits."""
-        return self._cfg.raw.run
+        return str(self._cfg.raw.run).zfill(6)
 
     @property
     def files(self) -> RawList:
@@ -79,14 +79,17 @@ class AlignmentConfig:
     @property
     def format(self) -> str:
         """Formatted run identifier string, e.g. Y2022_R008294_F101-151."""
-        return self._cfg.raw.format
+        return self._cfg.raw.format.format(
+            year=self._cfg.raw.year,
+            run=self._cfg.raw.run,
+            files=self.files)
 
     # =============================== Data info ==============================
 
     @property
     def data_dir(self) -> Path:
         """Data directory path (created if it does not exist)."""
-        path = self._cfg.data.dir
+        path = Path(self._cfg.data.dir.format(format=self.format))
         path.mkdir(parents=True, exist_ok=True)
         return path
 
@@ -111,15 +114,8 @@ class AlignmentConfig:
         if not (0 <= step_index < len(steps)):
             raise IndexError(
                 f"step_index {step_index} out of range [0, {len(steps)})")
-        return AlignmentSet(self._cfg.set, steps[step_index], step_index)
-    
-    @property
-    def set_dir(self):
-        """Root directory for all sets (created if it does not exist)."""
-        path = self._cfg.set.dir.format(set='', iters='', reco='', comment='', aa="")
-        path = Path(path)
-        path.mkdir(parents=True, exist_ok=True)
-        return path
+        return AlignmentSet(self._cfg.set, steps[step_index],
+                            step_index, self.data_dir)
 
     # ============================== Source info =============================
 
@@ -137,26 +133,26 @@ class AlignmentConfig:
     @property
     def dag_dir(self) -> Path:
         """DAG files directory (created if it does not exist)."""
-        path = self._cfg.dag.dir
+        path = Path(self._cfg.dag.dir.format(format=self.format))
         path.mkdir(parents=True, exist_ok=True)
         return path
 
     @property
     def dag_file(self) -> Path:
-        return self._cfg.dag.file
+        return self.dag_dir / self._cfg.dag.file
 
     @property
     def dag_recoexe(self) -> Path:
-        return self._cfg.dag.recoexe
+        return self.dag_dir / self._cfg.dag.recoexe
 
     @property
     def dag_milleexe(self) -> Path:
-        return self._cfg.dag.milleexe
+        return self.dag_dir / self._cfg.dag.milleexe
 
     def dag_iter_dir(self, iteration: int) -> Path:
         """DAG iteration directory (created if it does not exist)."""
         iter_str = f"{iteration:02d}"
-        path = Path(self._cfg.dag.iter.dir.format(iter=iter_str))
+        path = self.dag_dir / self._cfg.dag.iter.dir.format(iter=iter_str)
         path.mkdir(parents=True, exist_ok=True)
         return path
 
@@ -166,7 +162,8 @@ class AlignmentConfig:
 
     def dag_recosub(self, iteration: int, file_str: str) -> Path:
         iter_str = f"{iteration:02d}"
-        return Path(self._cfg.dag.iter.recosub.format(iter=iter_str, file=file_str))
+        return (self.dag_iter_dir(iteration) /
+                self._cfg.dag.iter.recosub.format(iter=iter_str, file=file_str))
 
     def dag_millejob(self, iteration: int) -> str:
         iter_str = f"{iteration:02d}"
@@ -174,41 +171,49 @@ class AlignmentConfig:
 
     def dag_millesub(self, iteration: int) -> Path:
         iter_str = f"{iteration:02d}"
-        return Path(self._cfg.dag.iter.millesub.format(iter=iter_str))
+        return (self.dag_iter_dir(iteration) /
+                self._cfg.dag.iter.millesub.format(iter=iter_str))
 
     def logs_dir(self, iteration: int) -> Path:
         """Logs directory for a specific iteration (created if needed)."""
         iter_str = f"{iteration:02d}"
-        path = Path(self._cfg.dag.iter.logs.dir.format(iter=iter_str))
+        path = (self.dag_iter_dir(iteration) /
+                self._cfg.dag.iter.logs.dir.format(iter=iter_str))
         path.mkdir(parents=True, exist_ok=True)
         return path
 
     def logs_reco_err(self, iteration: int, file_str: str) -> Path:
         iter_str = f"{iteration:02d}"
-        return Path(self._cfg.dag.iter.logs.recoerr.format(
-            iter=iter_str, file=file_str))
+        return (self.logs_dir(iteration) /
+                self._cfg.dag.iter.logs.recoerr.format(
+                    iter=iter_str, file=file_str))
 
     def logs_reco_log(self, iteration: int, file_str: str) -> Path:
         iter_str = f"{iteration:02d}"
-        return Path(self._cfg.dag.iter.logs.recolog.format(
-            iter=iter_str, file=file_str))
+        return (self.logs_dir(iteration) /
+                self._cfg.dag.iter.logs.recolog.format(
+                    iter=iter_str, file=file_str))
 
     def logs_reco_out(self, iteration: int, file_str: str) -> Path:
         iter_str = f"{iteration:02d}"
-        return Path(self._cfg.dag.iter.logs.recoout.format(
-            iter=iter_str, file=file_str))
+        return (self.logs_dir(iteration) /
+                self._cfg.dag.iter.logs.recoout.format(
+                    iter=iter_str, file=file_str))
 
     def logs_mille_err(self, iteration: int) -> Path:
         iter_str = f"{iteration:02d}"
-        return Path(self._cfg.dag.iter.logs.milleerr.format(iter=iter_str))
+        return (self.logs_dir(iteration) /
+                self._cfg.dag.iter.logs.milleerr.format(iter=iter_str))
 
     def logs_mille_log(self, iteration: int) -> Path:
         iter_str = f"{iteration:02d}"
-        return Path(self._cfg.dag.iter.logs.millelog.format(iter=iter_str))
+        return (self.logs_dir(iteration) /
+                self._cfg.dag.iter.logs.millelog.format(iter=iter_str))
 
     def logs_mille_out(self, iteration: int) -> Path:
         iter_str = f"{iteration:02d}"
-        return Path(self._cfg.dag.iter.logs.milleout.format(iter=iter_str))
+        return (self.logs_dir(iteration) /
+                self._cfg.dag.iter.logs.milleout.format(iter=iter_str))
 
     # ============================= Template info ============================
 
