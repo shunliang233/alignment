@@ -59,9 +59,9 @@ if __name__ == "__main__":
     #manually change the version to 03
     configFlags.IOVDb.GlobalTag           = "OFLCOND-FASER-05" # Always needed; must match FaserVersion
     #configFlags.IOVDb.GlobalTag           = "OFLCOND-"+ configFlags.GeoModel.FaserVersion  # Always needed; must match FaserVersion
-    configFlags.IOVDb.DBConnection        = "sqlite://;schema=FASER-04_ALLP200.db;dbname=CONDBR3" #dbname=CONDBR3
+    configFlags.IOVDb.DBConnection        = "sqlite://;schema=FASER-05_ALLP200.db;dbname=CONDBR3" #dbname=CONDBR3
     configFlags.GeoModel.Align.Disable = True          # Hack to avoid loading alignment when we want to create it from scratch
-    configFlags.addFlag("WriteAlignment.PoolFileName", "FASER-04_Align.pool.root") 
+    configFlags.addFlag("WriteAlignment.PoolFileName", "FASER-05_Align.pool.root") 
 
     # Parse flags from command line and lock
     configFlags.addFlag("AlignDbTool.AlignmentConstants", {}) 

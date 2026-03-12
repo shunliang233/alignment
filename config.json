@@ -5,7 +5,7 @@
     "files": "101-151",
     "iters": 15,
     "stations": 4,
-    "format": "Y{year}_R{run}_F{files}_ST{stations}_layer",
+    "format": "Y{year}_R{run}_F{files}_ST{stations}_back_local",
     "verbosity": "INFO"
   },
   "workflow": {
@@ -21,14 +21,14 @@
       "iters": 10,
       "comment": "IFT Alignment (global)",
       "pede": {
-        "step0": ["side", "3ST"]
+        "step0": ["local", "3ST"]
       }
     },
     "set2": {
       "iters": 10,
       "comment": "IFT Alignment (local)",
       "pede": {
-        "step0": ["layer", "3ST"]
+        "step0": ["global", "3ST"]
       }
     }
   },
@@ -71,7 +71,7 @@
     "recoexe": "runAlignment.sh",
     "millesub": "mille.sub.tpl",
     "milleexe": "runMillepede.sh",
-    "inputforalign": "align_2022_4ST_local.txt"
+    "inputforalign": "align_2022_3ST.txt"
   },
   "src": {
     "dir": "/afs/cern.ch/user/s/shunlian/alignment"
@@ -79,7 +79,7 @@
   "env": {
     "calypso": {
       "asetup": "/eos/home-s/shunlian/Alignment/calypso/asetup.faser",
-      "setup": "/eos/home-s/shunlian/Alignment/install/setup.sh"
+      "setup": "/eos/home-s/shunlian/Alignment/calypso/install/setup.sh"
     },
     "pede": "/eos/home-s/shunlian/Environments/apps/Millepede-II/V04-17-05",
     "root": "/cvmfs/sft.cern.ch/lcg/app/releases/ROOT/6.36.04/x86_64-almalinux9.6-gcc115-opt/bin/thisroot.sh"

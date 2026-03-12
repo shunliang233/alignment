@@ -3,12 +3,12 @@ echo "End WriteAlignmentConfig_Faser04.py"
 echo ""
 
 echo "Begin AtlCoolConsole.py"
-echo "exit" | AtlCoolConsole.py "sqlite://;schema=FASER-04_ALLP200.db;dbname=CONDBR3"
+echo "exit" | AtlCoolConsole.py "sqlite://;schema=FASER-05_ALLP200.db;dbname=CONDBR3"
 echo "End AtlCoolConsole.py"
 echo ""
 
 #AtlCoolCopy "sqlite://;schema=./FASER-01_ALLP200.db;dbname=CONDBR3" "sqlite://;schema=data/sqlite200/ALLP200.db;dbname=CONDBR3" -fnp -ot "TRACKER-ALIGN-01"
-AtlCoolCopy "sqlite://;schema=./FASER-04_ALLP200.db;dbname=CONDBR3" "sqlite://;schema=data/sqlite200/ALLP200.db;dbname=CONDBR3" -fnp -ot "TRACKER-ALIGN-05"
+AtlCoolCopy "sqlite://;schema=./FASER-05_ALLP200.db;dbname=CONDBR3" "sqlite://;schema=data/sqlite200/ALLP200.db;dbname=CONDBR3" -fnp -ot "TRACKER-ALIGN-05"
 
 #AtlCoolConsole.py "sqlite://;schema=data/sqlite200/ALLP200.db;dbname=CONDBR3" < AtlCoolConsole_CONDBR3_input.txt
 

@@ -76,9 +76,9 @@ echo "=== Finished aligndb_copy.sh ==="
 # Build the command based on number of stations
 FILE_PATH="/eos/experiment/faser/raw/${YEAR}/${RUN}/Faser-Physics-${RUN}-${FILE}.raw"
 if [ "$STATIONS" = "3" ]; then
-    CMD="python $SRC_DIR/faser_reco_alignment.py \"$FILE_PATH\" --alignment --noBackward --noIFT --output_level $VERBOSITY"
+    CMD="python $SRC_DIR/faser_reco_alignment.py \"$FILE_PATH\" --alignment --noForward --noIFT --output_level $VERBOSITY"
 elif [ "$STATIONS" = "4" ]; then
-    CMD="python $SRC_DIR/faser_reco_alignment.py \"$FILE_PATH\" --alignment --noBackward --output_level $VERBOSITY"
+    CMD="python $SRC_DIR/faser_reco_alignment.py \"$FILE_PATH\" --alignment --noForward --output_level $VERBOSITY"
 else
     echo "Error: STATIONS must be 3 or 4, got: $STATIONS"
     exit 1
